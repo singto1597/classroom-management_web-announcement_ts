@@ -29,6 +29,24 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/students/add',
+      name: 'student-add',
+      component: () => import('@/views/students/AddStudent.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/students/:no',
+      name: 'student-profile',
+      component: () => import('@/views/students/StudentProfile.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/students/:no/edit',
+      name: 'student-edit',
+      component: () => import('@/views/students/EditStudent.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/',
       redirect: '/dashboard'
     }
@@ -36,21 +54,17 @@ const router = createRouter({
 });
 
 // Navigation Guard
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
 
-  // ถ้าหน้าที่จะไปต้องการ Auth แต่ยังไม่ได้ Login ให้ไปหน้า Login
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login');
+    return '/login';
   } 
-  // ถ้าเข้าหน้า Login แต่ Login อยู่แล้ว ให้ไป Dashboard
   else if (to.path === '/login' && isAuthenticated) {
-    next('/dashboard');
-  } 
-  else {
-    next();
+    return '/dashboard';
   }
+  // ถ้าผ่านหมด ไม่ต้อง return อะไรเลย มันจะไปหน้าเดิมต่อเอง
 });
 
 export default router;
