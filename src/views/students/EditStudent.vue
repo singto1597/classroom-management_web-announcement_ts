@@ -73,8 +73,10 @@ const fetchStudent = async () => {
 const handleSubmit = async () => {
   try {
     saving.value = true
-    const serverId = authStore.user?.current_server_id
-    if (!serverId) throw new Error('ไม่พบข้อมูลเซิร์ฟเวอร์')
+    
+    // ❌ ลบการดึง authStore ที่ยังไม่มีทิ้งไป
+    // const serverId = authStore.user?.current_server_id
+    // if (!serverId) throw new Error('ไม่พบข้อมูลเซิร์ฟเวอร์')
 
     // Clean payload (ลบ whitespace)
     const payload = { ...form.value }
@@ -84,7 +86,8 @@ const handleSubmit = async () => {
       }
     })
 
-    await StudentService.updateStudent(serverId, studentNo, payload)
+    // ✅ เรียกใช้ API โดยส่ง currentServerId และ currentUserName ที่เรา Mock ไว้ด้านบน
+    await StudentService.updateStudent(currentServerId, studentNo, payload, currentUserName)
     
     await Swal.fire({
       icon: 'success',
@@ -96,10 +99,11 @@ const handleSubmit = async () => {
     
     router.push(`/students/${studentNo}`)
   } catch (error: any) {
+    console.error("Save Error:", error) // ใส่ไว้เผื่อสอดแนมใน Console
     Swal.fire({
       icon: 'error',
       title: 'บันทึกไม่สำเร็จ',
-      text: error.response?.data?.detail || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
+      text: error.response?.data?.detail || error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
     })
   } finally {
     saving.value = false
