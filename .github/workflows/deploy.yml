@@ -1,7 +1,9 @@
 name: Auto Deploy Web TS
 on:
   push:
-    branches: [ main, staging ]
+    branches:
+      - main
+      - staging
 jobs:
   deploy:
     runs-on: ubuntu-latest
