@@ -46,18 +46,19 @@ const form = ref<Partial<Student>>({
 const fetchStudent = async () => {
   try {
     loading.value = true
-    //const serverId = authStore.user?.current_server_id
-    //if (!serverId) throw new Error('ไม่พบข้อมูลเซิร์ฟเวอร์')
     
-    //const data = await StudentService.getStudentByNo(serverId, studentNo)
-    student.value = await StudentService.getStudentByNo(currentServerId, studentNo)
+    // ✅ 1. รับค่ามาเก็บไว้ในตัวแปร data แทน (ลบ student.value ทิ้งไปเลย)
+    const data = await StudentService.getStudentByNo(currentServerId, studentNo)
+    
     // Pre-fill form (เฉพาะฟิลด์ที่เรามีใน form)
     Object.keys(form.value).forEach(key => {
+      // ✅ 2. ตอนนี้ data มีตัวตนแล้ว เอามาวนลูปใส่ฟอร์มได้เลย
       if (key in data) {
         (form.value as any)[key] = (data as any)[key] || ''
       }
     })
   } catch (error: any) {
+    console.error("🔴 สอดแนม Error:", error) // เผื่อพังอีกจะได้กด F12 ดูได้
     Swal.fire({
       icon: 'error',
       title: 'เกิดข้อผิดพลาด',
