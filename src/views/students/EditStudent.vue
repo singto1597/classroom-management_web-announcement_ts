@@ -117,25 +117,26 @@ onMounted(() => {
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <div>
             <div class="flex items-center gap-3 mb-1">
-              <div class="p-2 bg-primary/10 rounded-lg text-primary">
+              <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
               </div>
               <h2 class="text-2xl font-bold text-slate-800">แก้ไขข้อมูลโปรไฟล์</h2>
             </div>
             <p class="text-slate-500 text-sm ml-11">รหัสนักเรียน: <span class="font-semibold text-slate-700">#{{ studentNo }}</span> • อัปเดตข้อมูลของคุณให้เป็นปัจจุบัน</p>
           </div>
+          
           <div class="flex gap-3 w-full md:w-auto ml-11 md:ml-0">
             <button 
               type="button" 
               @click="router.back()" 
-              class="btn btn-ghost hover:bg-slate-100 flex-1 md:flex-none font-medium text-slate-600"
+              class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex-1 md:flex-none font-medium"
               :disabled="saving"
             >
               ยกเลิก
             </button>
             <button 
               type="submit" 
-              class="btn btn-primary px-8 shadow-lg shadow-primary/30 hover:shadow-primary/40 transition-all flex-1 md:flex-none font-medium text-white"
+              class="btn bg-blue-600 hover:bg-blue-700 text-white border-none px-8 shadow-lg shadow-blue-600/30 transition-all flex-1 md:flex-none font-medium flex items-center gap-2"
               :disabled="saving"
             >
               <span v-if="saving" class="loading loading-spinner loading-sm"></span>
