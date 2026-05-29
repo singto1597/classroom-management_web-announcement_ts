@@ -214,24 +214,26 @@ onMounted(fetchData)
             <div class="flex gap-2">
                <button 
                  @click="toggleStatus(task)"
-                 class="btn btn-sm px-2"
+                 class="btn btn-sm px-3"
                  :class="task.status === 'done' ? 'btn-outline btn-warning' : 'btn-outline btn-success'"
-                 :title="task.status === 'done' ? 'ยังไม่เสร็จ' : 'เสร็จแล้ว'"
                >
                  <i v-if="task.status === 'done'" class="bi bi-arrow-counterclockwise"></i>
                  <i v-else class="bi bi-check-lg"></i>
+                 <span v-if="task.status !== 'done'" class="ml-1">เสร็จ</span>
                </button>
 
                <router-link 
                  :to="`/tasks/${task.id}/edit`" 
-                 class="btn btn-sm btn-outline btn-primary px-2"
+                 class="btn btn-sm btn-outline btn-primary px-3"
+                 title="แก้ไข"
                >
                  <i class="bi bi-pencil"></i>
                </router-link>
 
                <button 
                  @click="deleteTask(task.id)"
-                 class="btn btn-sm btn-outline btn-error px-2"
+                 class="btn btn-sm btn-outline btn-error px-3"
+                 title="ลบ"
                >
                  <i class="bi bi-trash"></i>
                </button>
