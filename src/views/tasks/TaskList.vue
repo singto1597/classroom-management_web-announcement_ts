@@ -16,12 +16,20 @@ const filter = ref<'all' | 'pending' | 'done'>('pending')
 const fetchData = async () => {
   isLoading.value = true
   try {
+    // ❌ ของเดิมที่มันพยายามรอ 2 อย่างพร้อมกัน ให้เปลี่ยนเป็น:
+    /*
     const [tasksRes, notesRes] = await Promise.all([
       TaskService.getAllTasks(currentServerId),
       TaskService.getDailyNotes(currentServerId)
     ])
     tasks.value = tasksRes as any[]
     notes.value = notesRes as any[]
+    */
+
+    // ✅ แบบแก้ขัด: โหลดแค่งาน (Tasks) อย่างเดียวก่อน
+    const tasksRes = await TaskService.getAllTasks(currentServerId)
+    tasks.value = tasksRes as any[]
+    notes.value = [] // ปล่อยว่างไว้ก่อน
   } catch (error: any) {
     Swal.fire('Error', error.response?.data?.detail || 'Failed to fetch data', 'error')
   } finally {
