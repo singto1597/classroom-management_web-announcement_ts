@@ -4,7 +4,7 @@ import { TaskService } from '@/services/task'
 import type { Task, DailyNote } from '@/types/task'
 import Swal from 'sweetalert2'
 
-// Mock context
+// Mock context (ปล่อยให้ Backend ตรวจสอบสิทธิ์เอง)
 const currentServerId = '1500761770468315248'
 const currentUserName = 'singto1597'
 
@@ -13,25 +13,35 @@ const notes = ref<DailyNote[]>([])
 const isLoading = ref(true)
 const filter = ref<'all' | 'pending' | 'done'>('pending')
 
+// ตั้งค่า Toast สำหรับ SweetAlert ให้แจ้งเตือนแบบสมูท ไม่บล็อกหน้าจอ
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+})
+
 const fetchData = async () => {
   isLoading.value = true
   try {
-    // ❌ ของเดิมที่มันพยายามรอ 2 อย่างพร้อมกัน ให้เปลี่ยนเป็น:
-    /*
-    const [tasksRes, notesRes] = await Promise.all([
+    // โหลดข้อมูลแบบขนาน ถ้า Note พัง Task ก็ยังทำงานได้
+    const [tasksResult, notesResult] = await Promise.allSettled([
       TaskService.getAllTasks(currentServerId),
       TaskService.getDailyNotes(currentServerId)
     ])
-    tasks.value = tasksRes as any[]
-    notes.value = notesRes as any[]
-    */
 
-    // ✅ แบบแก้ขัด: โหลดแค่งาน (Tasks) อย่างเดียวก่อน
-    const tasksRes = await TaskService.getAllTasks(currentServerId)
-    tasks.value = tasksRes as any[]
-    notes.value = [] // ปล่อยว่างไว้ก่อน
-  } catch (error: any) {
-    Swal.fire('Error', error.response?.data?.detail || 'Failed to fetch data', 'error')
+    if (tasksResult.status === 'fulfilled') {
+      tasks.value = tasksResult.value as Task[]
+    } else {
+      Toast.fire({ icon: 'error', title: 'ดึงข้อมูลงานไม่สำเร็จ' })
+    }
+
+    if (notesResult.status === 'fulfilled') {
+      notes.value = notesResult.value as DailyNote[]
+    } else {
+      notes.value = [] // ปล่อยว่างถ้าดึง Note ไม่ได้
+    }
   } finally {
     isLoading.value = false
   }
@@ -79,13 +89,15 @@ const toggleStatus = async (task: Task) => {
   try {
     if (task.status === 'pending') {
       await TaskService.markDone(currentServerId, task.id, currentUserName)
-      Swal.fire({ icon: 'success', title: 'ยินดีด้วย! งานเสร็จแล้ว', timer: 1500, showConfirmButton: false })
+      Toast.fire({ icon: 'success', title: '🎉 ยินดีด้วย! งานเสร็จแล้ว' })
     } else {
       await TaskService.markPending(currentServerId, task.id, currentUserName)
+      Toast.fire({ icon: 'info', title: '🔄 เปลี่ยนกลับเป็นยังไม่เสร็จ' })
     }
     await fetchData()
   } catch (error: any) {
-    Swal.fire('Error', error.response?.data?.detail || 'Failed to update status', 'error')
+    // ถ้า Backend ด่ากลับมาว่าไม่มีสิทธิ์ จะโชว์ตรงนี้
+    Swal.fire('ข้อผิดพลาด', error.response?.data?.detail || 'ไม่สามารถอัปเดตสถานะได้', 'error')
   }
 }
 
@@ -104,10 +116,11 @@ const deleteTask = async (taskId: number) => {
   if (result.isConfirmed) {
     try {
       await TaskService.deleteTask(currentServerId, taskId, currentUserName)
-      Swal.fire('ลบแล้ว!', 'ลบงานเรียบร้อยแล้ว', 'success')
+      Toast.fire({ icon: 'success', title: '🗑️ ลบงานเรียบร้อยแล้ว' })
       await fetchData()
     } catch (error: any) {
-      Swal.fire('Error', error.response?.data?.detail || 'Failed to delete task', 'error')
+      // ดักจับ Error จาก Backend เช่น "You don't have permission"
+      Swal.fire('ข้อผิดพลาด', error.response?.data?.detail || 'ไม่สามารถลบงานได้', 'error')
     }
   }
 }
@@ -117,7 +130,6 @@ onMounted(fetchData)
 
 <template>
   <div class="container mx-auto p-4 max-w-6xl">
-    <!-- Header Section -->
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
       <h3 class="text-2xl font-bold flex items-center gap-2">
         <i class="bi bi-clipboard-check text-blue-600"></i> รายการงาน & โน้ต
@@ -142,7 +154,6 @@ onMounted(fetchData)
       </div>
     </div>
 
-    <!-- Daily Notes Section (UX Improvement: Display as a section above tasks) -->
     <div v-if="notes.length > 0" class="mb-8">
       <h4 class="text-lg font-bold mb-4 flex items-center gap-2 text-yellow-600">
         <i class="bi bi-sticky-fill"></i> โน้ตรายวันล่าสุด
@@ -201,7 +212,6 @@ onMounted(fetchData)
             </span>
 
             <div class="flex gap-2">
-               <!-- Mark Action -->
                <button 
                  @click="toggleStatus(task)"
                  class="btn btn-sm px-2"
@@ -212,7 +222,6 @@ onMounted(fetchData)
                  <i v-else class="bi bi-check-lg"></i>
                </button>
 
-               <!-- Edit -->
                <router-link 
                  :to="`/tasks/${task.id}/edit`" 
                  class="btn btn-sm btn-outline btn-primary px-2"
@@ -220,7 +229,6 @@ onMounted(fetchData)
                  <i class="bi bi-pencil"></i>
                </router-link>
 
-               <!-- Delete -->
                <button 
                  @click="deleteTask(task.id)"
                  class="btn btn-sm btn-outline btn-error px-2"
