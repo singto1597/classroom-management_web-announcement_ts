@@ -47,6 +47,30 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/tasks',
+      name: 'task-list',
+      component: () => import('@/views/tasks/TaskList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/tasks/add',
+      name: 'task-add',
+      component: () => import('@/views/tasks/AddTask.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/tasks/:id/edit',
+      name: 'task-edit',
+      component: () => import('@/views/tasks/EditTask.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/schedules',
+      name: 'schedule-manager',
+      component: () => import('@/views/schedules/ScheduleManager.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/',
       redirect: '/dashboard'
     }

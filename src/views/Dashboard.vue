@@ -37,6 +37,32 @@ const authStore = useAuthStore();
           </div>
           <p class="text-gray-500 text-sm">ดูรายชื่อนักเรียน, แก้ไขข้อมูล และจัดการสถานะ</p>
         </RouterLink>
+
+        <RouterLink 
+          to="/tasks" 
+          class="flex flex-col p-6 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow group"
+        >
+          <div class="flex items-center mb-4">
+            <div class="p-3 bg-green-50 text-green-600 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
+              <i class="bi bi-clipboard-check text-2xl"></i>
+            </div>
+            <h3 class="ms-4 text-lg font-bold text-gray-800">ระบบสั่งงาน & โน้ต</h3>
+          </div>
+          <p class="text-gray-500 text-sm">จัดการการบ้าน, งานค้าง และประกาศโน้ตรายวันสำหรับนักเรียน</p>
+        </RouterLink>
+
+        <RouterLink 
+          to="/schedules" 
+          class="flex flex-col p-6 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow group"
+        >
+          <div class="flex items-center mb-4">
+            <div class="p-3 bg-red-50 text-red-600 rounded-lg group-hover:bg-red-600 group-hover:text-white transition-colors">
+              <i class="bi bi-calendar-event-fill text-2xl"></i>
+            </div>
+            <h3 class="ms-4 text-lg font-bold text-gray-800">จัดการตารางเรียน</h3>
+          </div>
+          <p class="text-gray-500 text-sm">ตั้งตารางเรียนปกติ, การแต่งกาย และข้อยกเว้นพิเศษ/วันหยุด</p>
+        </RouterLink>
       </div>
     </div>
   </div>
