@@ -34,20 +34,22 @@ onMounted(async () => {
 const selectRoom = async (room: UserRoom) => {
   const safeServerId = room.server_id_str || String(room.server_id);
   
-  // เปลี่ยนปุ่มเป็นสถานะโหลด (ถ้าอยากทำ) หรือใช้ Swal โหลด
   Swal.fire({ title: 'กำลังเข้าสู่ห้องเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
   try {
-    // 🚀 แอบไปดึงข้อมูลโปรไฟล์ของตัวเองมาก่อน!
+    // 1. ดึงโปรไฟล์
     const myProfile: any = await StudentService.getMyProfile(safeServerId);
-    // เอาชื่อจริง+นามสกุล มารวมกัน
     const fullName = `${myProfile.first_name} ${myProfile.last_name}`;
     
-    authStore.setRoom(safeServerId, room.role, fullName);
+    // 🔥 แก้ตรงนี้: ส่งให้ครบ 4 ตัว (ID, ชื่อห้อง, Role, ชื่อผู้ใช้)
+    authStore.setRoom(safeServerId, room.room_name, room.role, fullName);
+
   } catch (error) {
-    // ถ้าดึงไม่ได้ (เช่น เป็น Super Admin ที่ไม่ได้อยู่ในตารางนักเรียน) ให้ใช้ชื่อตาม Role ไปก่อน
+    // ถ้าดึงไม่ได้ (เช่น เป็น Super Admin) ให้ใช้ชื่อตาม Role ไปก่อน
     const fallbackName = room.role === 'admin' ? 'Administrator' : 'User';
-    authStore.setRoom(safeServerId, room.role, fallbackName);
+    
+    // 🔥 แก้ตรงนี้ด้วย: ส่งให้ครบ 4 ตัวเช่นกัน
+    authStore.setRoom(safeServerId, room.room_name, room.role, fallbackName);
   }
 
   Swal.close();
