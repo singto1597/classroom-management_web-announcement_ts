@@ -70,6 +70,49 @@ const router = createRouter({
       component: () => import('@/views/schedules/ScheduleManager.vue'),
       meta: { requiresAuth: true }
     },
+    // --- Finance Module ---
+    {
+      path: '/finance',
+      name: 'finance-dashboard',
+      component: () => import('@/views/finance/FinanceDashboard.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/finance/settings',
+      name: 'finance-settings',
+      component: () => import('@/views/finance/FinanceSettings.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/finance/transactions',
+      name: 'finance-transactions',
+      component: () => import('@/views/finance/TransactionList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/finance/transactions/add',
+      name: 'finance-transactions-add',
+      component: () => import('@/views/finance/AddTransaction.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/finance/collections',
+      name: 'finance-collections',
+      component: () => import('@/views/finance/CollectionList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/finance/collections/:id',
+      name: 'finance-collection-detail',
+      component: () => import('@/views/finance/CollectionDetail.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/finance/debtors',
+      name: 'finance-debtors',
+      component: () => import('@/views/finance/DebtorList.vue'),
+      meta: { requiresAuth: true }
+    },
     {
       path: '/',
       redirect: '/dashboard'
