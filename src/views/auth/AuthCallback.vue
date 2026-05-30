@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import api from '@/services/api'; // เราใช้ axios instance ที่ตั้งค่าไว้แล้วเรียกตรงๆ เลยชัวร์กว่า
+import api from '@/services/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,7 +18,7 @@ onMounted(async () => {
   }
 
   try {
-    // 1. 🚀 ยิง API ไปหา Backend โดยส่งเป็น JSON Body (แก้บัค 422)
+    // 1. 🚀 ยิง API ไปหา Backend โดยส่งเป็น JSON Body
     const response: any = await api.post('/api/auth/discord/login', { 
       code: code 
     });
@@ -28,7 +28,7 @@ onMounted(async () => {
     // 2. บันทึก Token ลง Store
     authStore.setToken(token);
     
-    // 3. 📦 ถอดรหัส JWT Token เพื่อเอา discord_id ที่ Backend ซ่อนไว้
+    // 3. 📦 ถอดรหัส JWT Token
     const payloadBase64 = token.split('.')[1];
     const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
@@ -39,9 +39,10 @@ onMounted(async () => {
     );
     const decoded = JSON.parse(jsonPayload);
 
-    // 4. ดึง discord_id ออกมา (ตามที่ auth_service.py สร้างไว้)
-    const discordId = res.discord_id_str || decoded.discord_id_str || String(res.discord_id || decoded.sub);
-    
+    // 4. ดึง discord_id ออกมา (แก้บัค res is not defined ตรงนี้แหละ เปลี่ยนมาใช้ response)
+    // เน้นดึงแบบ String (discord_id_str) ออกมาก่อน เพื่อกัน JavaScript ปัดเศษตัวเลข
+    const discordId = response.discord_id_str || decoded.discord_id_str || String(response.discord_id || decoded.sub);
+
     if (!discordId) {
       throw new Error('โครงสร้าง Token ไม่ถูกต้อง ไม่พบ Discord ID');
     }
@@ -82,7 +83,7 @@ const goBackToLogin = () => {
           <i class="bi bi-exclamation-triangle-fill text-3xl"></i>
         </div>
         <h2 class="text-2xl font-bold text-slate-800 mb-2">เข้าสู่ระบบไม่สำเร็จ</h2>
-        <p class="text-rose-600 font-medium mb-8 bg-rose-50 p-4 rounded-xl border border-rose-100 text-sm">
+        <p class="text-rose-600 font-medium mb-8 bg-rose-50 p-4 rounded-xl border border-rose-100 text-sm break-words">
           {{ errorMsg }}
         </p>
         
