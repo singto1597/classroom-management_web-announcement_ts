@@ -18,6 +18,13 @@ const router = createRouter({
       meta: { requiresAuth: false }
     },
     {
+      // 🛑 ย้ายมาอยู่ตรงนี้! ให้อยู่ระดับนอกสุด จะได้ไม่โดน MainLayout คลุม
+      path: '/select-room',
+      name: 'select-room',
+      component: () => import('@/views/auth/SelectRoom.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/',
       component: MainLayout,
       meta: { requiresAuth: true },
@@ -25,12 +32,6 @@ const router = createRouter({
         {
           path: '',
           redirect: '/dashboard'
-        },
-        {
-          path: '/select-room',
-          name: 'select-room',
-          component: () => import('@/views/auth/SelectRoom.vue'),
-          meta: { requiresAuth: true } // ไม่ต้องเอาไปใส่ใน MainLayout นะ ให้มันอยู่หน้าเดี่ยวๆ
         },
         {
           path: 'dashboard',
@@ -129,6 +130,7 @@ router.beforeEach((to, from) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
   const currentRoomId = authStore.currentRoomId;
+  const currentRole = authStore.currentRole; // ดึง Role มาเช็คด้วย
   const isAdmin = authStore.isAdmin;
 
   // 1. ตรวจสอบการล็อกอิน
@@ -140,14 +142,14 @@ router.beforeEach((to, from) => {
     return '/select-room';
   }
 
-  // 2. ถ้าล็อกอินแล้วแต่ยังไม่ได้เลือกห้อง ให้บังคับไปหน้า Dashboard (ยกเว้นกำลังจะไป Dashboard อยู่แล้ว)
-  if (isAuthenticated && !currentRoomId && to.path !== '/dashboard') {
+  // 2. ถ้าล็อกอินแล้วแต่ยังไม่ได้เลือกห้อง (หรือข้อมูลห้องพัง/Role หาย) ให้บังคับไปหน้า Select Room เสมอ
+  if (isAuthenticated && (!currentRoomId || !currentRole) && to.path !== '/select-room') {
     return '/select-room';
   }
 
   // 3. ตรวจสอบสิทธิ์ Admin (RBAC)
   if (to.meta.requiresAdmin && !isAdmin) {
-    return '/dashboard'; // หรือหน้าแจ้งเตือนว่าไม่มีสิทธิ์
+    return '/dashboard'; // โดนเตะกลับแบบเงียบๆ ถ้าไม่ใช่แอดมิน
   }
 });
 
