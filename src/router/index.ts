@@ -86,7 +86,7 @@ const router = createRouter({
     {
       path: '/finance/transactions',
       name: 'finance-transactions',
-      component: () => import('@/views/finance/TransactionList.vue'),
+      component: () => import('@/views/finance/TransactionHistory.vue'),
       meta: { requiresAuth: true }
     },
     {
