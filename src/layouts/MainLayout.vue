@@ -157,6 +157,7 @@ const logout = () => {
                     <p class="text-xs text-gray-500 truncate"><i class="bi bi-discord text-[#5865F2]"></i> Connected</p>
                 </div>
             </button>
+          </div>
         </div>
       </header>
 
