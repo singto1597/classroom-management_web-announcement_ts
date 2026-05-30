@@ -2,6 +2,9 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { StudentService } from '@/services/student';
+import Swal from 'sweetalert2';
+
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -15,6 +18,18 @@ const isAdmin = computed(() => authStore.isAdmin);
 const handleChangeRoom = () => {
   authStore.clearRoom();
   router.push('/select-room'); 
+};
+
+
+const goToMyProfile = async () => {
+  try {
+    Swal.fire({ title: 'กำลังดึงข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const myProfile: any = await StudentService.getMyProfile(authStore.currentRoomId!);
+    Swal.close();
+    router.push(`/students/${myProfile.student_no}`);
+  } catch (error) {
+    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงโปรไฟล์ได้ (คุณอาจเป็น Admin ที่ไม่ได้อยู่ในรายชื่อนักเรียน)', 'warning');
+  }
 };
 </script>
 
@@ -103,9 +118,12 @@ const handleChangeRoom = () => {
               <i class="bi bi-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </router-link>
             
-            <button class="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-4 px-6 rounded-2xl border border-slate-200 transition-all flex items-center justify-between group text-left">
+            <button 
+              @click="goToMyProfile"
+              class="w-full bg-slate-50 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-700 font-bold py-4 px-6 rounded-2xl border border-slate-200 transition-all flex items-center justify-between group text-left"
+            >
               <span>🪪 ข้อมูลโปรไฟล์ของฉัน</span>
-              <i class="bi bi-person-badge text-slate-400"></i>
+              <i class="bi bi-person-badge text-slate-400 group-hover:text-blue-500 transition-colors"></i>
             </button>
             
             <template v-if="isAdmin">

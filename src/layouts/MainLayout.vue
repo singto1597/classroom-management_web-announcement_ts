@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { RouterView, useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import Swal from 'sweetalert2';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -16,6 +17,21 @@ const menuItems = [
   { name: 'ตารางเรียน', path: '/schedules', icon: 'bi-calendar-event-fill' },
   { name: 'การเงิน', path: '/finance', icon: 'bi-wallet2' },
 ];
+
+const showAccountInfo = () => {
+  Swal.fire({
+    title: 'ข้อมูลบัญชีระบบ',
+    html: `
+      <div class="text-left mt-4 space-y-3">
+        <p class="text-sm text-gray-600"><b>Discord ID:</b> <span class="bg-gray-100 px-2 py-1 rounded font-mono">${authStore.discordId}</span></p>
+        <p class="text-sm text-gray-600"><b>Room Role:</b> <span class="uppercase font-bold text-blue-600">${authStore.currentRole}</span></p>
+      </div>
+    `,
+    icon: 'info',
+    confirmButtonText: 'ปิด',
+    confirmButtonColor: '#3b82f6'
+  });
+};
 
 const logout = () => {
   authStore.logout();
@@ -78,7 +94,9 @@ const logout = () => {
       :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
       <div class="flex items-center justify-between h-16 px-6 bg-blue-600">
-        <span class="text-white text-xl font-bold tracking-wider">CLASSROOM SYNC</span>
+        <RouterLink to="/dashboard" class="flex items-center h-16 px-6 bg-blue-600 hover:bg-blue-700 transition cursor-pointer">
+            <span class="text-white text-xl font-bold tracking-wider">CLASSROOM SYNC</span>
+        </RouterLink>
         <button @click="isSidebarOpen = false" class="text-white">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
@@ -127,14 +145,18 @@ const logout = () => {
             </div>
           </div>
           <div class="flex items-center">
-             <div class="hidden sm:flex flex-col items-end me-4">
-                <span class="text-sm font-bold text-gray-800">{{ authStore.currentUserName }}</span>
-                <span class="text-xs text-gray-500 uppercase tracking-tighter">{{ authStore.currentRole }}</span>
-             </div>
-             <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                {{ authStore.currentUserName?.charAt(0).toUpperCase() || 'U' }}
-             </div>
-          </div>
+             <button 
+                @click="showAccountInfo"
+                class="w-full flex items-center p-3 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl mb-4 transition-all text-left group"
+            >
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                    {{ authStore.currentUserName?.charAt(0).toUpperCase() || 'U' }}
+                </div>
+                <div class="ms-3 overflow-hidden flex-1">
+                    <p class="text-sm font-bold text-gray-800 truncate">{{ authStore.currentUserName }}</p>
+                    <p class="text-xs text-gray-500 truncate"><i class="bi bi-discord text-[#5865F2]"></i> Connected</p>
+                </div>
+            </button>
         </div>
       </header>
 

@@ -27,6 +27,9 @@ export const StudentService = {
     throw new Error('ไม่พบข้อมูลนักเรียนหมายเลขนี้')
   },
 
+  async getMyProfile(serverId: string) { 
+    return await api.get('/api/classroom/' + serverId + '/students/me');
+  },
   /**
    * อัปเดตข้อมูลนักเรียน
    */

@@ -140,7 +140,7 @@ const handleSaveOverride = async () => {
             <label class="label font-bold text-gray-600 text-sm">📚 วิชาเรียน (เรียงตามคาบ)</label>
             <textarea 
               v-model="defaultForm.subjects" 
-              class="textarea textarea-bordered h-32 rounded-xl bg-gray-50 focus:bg-white focus:border-blue-500 transition-colors" 
+              class="textarea textarea-bordered w-full h-32 rounded-xl bg-gray-50 focus:bg-white focus:border-blue-500 transition-colors" 
               placeholder="คณิต, ไทย, อังกฤษ, พักกลางวัน, ฟิสิกส์..."
               required
             ></textarea>

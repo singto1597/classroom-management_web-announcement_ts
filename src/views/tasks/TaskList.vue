@@ -139,7 +139,7 @@ onMounted(fetchData)
   <div class="min-h-screen bg-slate-50/50 p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
       
-      <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+      <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
         <div>
           <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800 flex items-center gap-3">
             <div class="p-3 bg-blue-100 rounded-2xl text-blue-600 shadow-sm">
@@ -150,22 +150,16 @@ onMounted(fetchData)
           <p class="text-slate-500 mt-2 ml-1">จัดการการบ้านและอัปเดตประกาศรายวันของห้อง</p>
         </div>
         
-        <div class="bg-slate-200/60 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner backdrop-blur-sm">
-          <button 
-            @click="filter = 'pending'"
-            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300"
-            :class="filter === 'pending' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
-          >กำลังทำ</button>
-          <button 
-            @click="filter = 'done'"
-            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300"
-            :class="filter === 'done' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
-          >เสร็จแล้ว</button>
-          <button 
-            @click="filter = 'all'"
-            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300"
-            :class="filter === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'"
-          >ทั้งหมด</button>
+        <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+          <div class="bg-slate-200/60 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner backdrop-blur-sm w-full sm:w-auto overflow-x-auto">
+            <button @click="filter = 'pending'" :class="filter === 'pending' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap">กำลังทำ</button>
+            <button @click="filter = 'done'" :class="filter === 'done' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap">เสร็จแล้ว</button>
+            <button @click="filter = 'all'" :class="filter === 'all' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap">ทั้งหมด</button>
+          </div>
+
+          <router-link v-if="isAdmin" to="/tasks/add" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+            <i class="bi bi-plus-lg"></i> สร้างใหม่
+          </router-link>
         </div>
       </div>
 
@@ -268,13 +262,6 @@ onMounted(fetchData)
       </div>
 
       <div class="mt-12 flex flex-col sm:flex-row justify-center items-center gap-4">
-        <router-link v-if="isAdmin" to="/tasks/add" class="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2">
-          <i class="bi bi-plus-lg text-lg"></i> เพิ่มงาน / โน้ตใหม่
-        </router-link>
-        
-        <router-link to="/schedules" class="w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-slate-50 text-slate-700 font-bold border border-slate-200 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2">
-          <i class="bi bi-calendar3 text-blue-500"></i> ดูตารางเรียน
-        </router-link>
         <router-link to="/dashboard" class="w-full sm:w-auto px-8 py-3.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 font-bold rounded-2xl transition-all flex items-center justify-center gap-2">
           <i class="bi bi-house"></i> กลับหน้าหลัก
         </router-link>

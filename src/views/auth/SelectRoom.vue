@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classroom';
 import type { UserRoom } from '@/types/classroom';
 import Swal from 'sweetalert2';
+import { StudentService } from '@/services/student';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -30,16 +31,27 @@ onMounted(async () => {
   }
 });
 
-const selectRoom = (room: UserRoom) => {
-  // บังคับใช้ server_id_str ที่เป็น String 100% จาก Backend
-  const safeServerId = room.server_id_str; 
+const selectRoom = async (room: UserRoom) => {
+  const safeServerId = room.server_id_str || String(room.server_id);
   
-  if (!safeServerId) {
-    return Swal.fire('Error', 'ไม่พบ Server ID ที่ถูกต้อง', 'error');
+  // เปลี่ยนปุ่มเป็นสถานะโหลด (ถ้าอยากทำ) หรือใช้ Swal โหลด
+  Swal.fire({ title: 'กำลังเข้าสู่ห้องเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  try {
+    // 🚀 แอบไปดึงข้อมูลโปรไฟล์ของตัวเองมาก่อน!
+    const myProfile: any = await StudentService.getMyProfile(safeServerId);
+    // เอาชื่อจริง+นามสกุล มารวมกัน
+    const fullName = `${myProfile.first_name} ${myProfile.last_name}`;
+    
+    authStore.setRoom(safeServerId, room.role, fullName);
+  } catch (error) {
+    // ถ้าดึงไม่ได้ (เช่น เป็น Super Admin ที่ไม่ได้อยู่ในตารางนักเรียน) ให้ใช้ชื่อตาม Role ไปก่อน
+    const fallbackName = room.role === 'admin' ? 'Administrator' : 'User';
+    authStore.setRoom(safeServerId, room.role, fallbackName);
   }
 
-  authStore.setRoom(safeServerId, room.role, authStore.currentUserName || 'User');
-  router.push('/dashboard'); 
+  Swal.close();
+  router.push('/dashboard');
 };
 </script>
 
