@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
+import { useAuthStore } from '@/stores/auth';
 import { FinanceService } from '@/services/finance';
 import type { Transaction } from '@/types/finance';
 import Swal from 'sweetalert2';
 
-// Mock Data
-const currentServerId = '1500761770468315248';
-const currentUserName = 'singto1597';
+const authStore = useAuthStore();
+const currentServerId = authStore.currentRoomId!;
+const currentUserName = authStore.currentUserName!;
+
+// ดึง isAdmin ออกมาเป็น computed เพื่อให้ reactivity ทำงานถูกต้องและเรียกใช้สั้นลง
+const isAdmin = computed(() => authStore.isAdmin);
 
 const transactions = ref<Transaction[]>([]);
 const totalCount = ref(0);
@@ -49,6 +53,12 @@ const fetchTransactions = async () => {
 };
 
 const handleRevert = async (transaction: Transaction) => {
+  // เพิ่ม Guard ป้องกันเผื่อมีคนเรียกฟังก์ชันนี้ข้าม UI (เช่นผ่าน Vue Devtools)
+  if (!isAdmin.value) {
+    Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถยกเลิกรายการได้', 'error');
+    return;
+  }
+
   const result = await Swal.fire({
     title: 'ต้องการยกเลิก?',
     html: `คุณกำลังจะยกเลิกรายการ:<br><b>"${transaction.description}"</b><br><br><span class="text-rose-500 text-sm">ยอดเงินจะถูกคืนกลับกระเป๋าเดิม หากเป็นรายการรับเงินจากเพื่อน สถานะบิลเพื่อนจะถูกตีกลับเป็น "ค้างจ่าย" ทันที</span>`,
@@ -126,6 +136,7 @@ const resetFilters = () => {
         </div>
       </div>
       <RouterLink 
+        v-if="isAdmin"
         to="/finance/transactions/add"
         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition flex items-center gap-2"
       >
@@ -228,7 +239,7 @@ const resetFilters = () => {
                   <i class="bi bi-link-45deg"></i> โอนเงิน
                 </div>
                 <button 
-                  v-else
+                  v-else-if="isAdmin"
                   @click="handleRevert(t)"
                   class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                   title="ยกเลิกรายการ"

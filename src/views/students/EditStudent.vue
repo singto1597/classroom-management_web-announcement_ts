@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import StudentService from '@/services/student'
@@ -14,8 +14,10 @@ const studentNo = route.params.no as string
 const loading = ref(true)
 const saving = ref(false)
 
-const currentServerId = '1500761770468315248'
-const currentUserName = 'singto1597'
+// --- นำ Mock Data ออก แล้วดึงจาก Store ---
+const currentServerId = authStore.currentRoomId!
+const currentUserName = authStore.currentUserName!
+const isAdmin = computed(() => authStore.isAdmin)
 
 const form = ref<Partial<Student>>({
   student_id: '',
@@ -66,6 +68,10 @@ const fetchStudent = async () => {
 }
 
 const handleSubmit = async () => {
+  if (!isAdmin.value) {
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่แก้ไขข้อมูลนักเรียนได้', 'error')
+  }
+
   try {
     saving.value = true
     const payload = { ...form.value }
@@ -134,15 +140,20 @@ onMounted(() => {
             >
               ยกเลิก
             </button>
-            <button 
-              type="submit" 
-              class="btn bg-blue-600 hover:bg-blue-700 text-white border-none px-8 shadow-lg shadow-blue-600/30 transition-all flex-1 md:flex-none font-medium flex items-center gap-2"
-              :disabled="saving"
-            >
-              <span v-if="saving" class="loading loading-spinner loading-sm"></span>
-              <span v-else>💾</span>
-              บันทึกการเปลี่ยนแปลง
-            </button>
+            <template v-if="isAdmin">
+              <button 
+                type="submit" 
+                class="btn bg-blue-600 hover:bg-blue-700 text-white border-none px-8 shadow-lg shadow-blue-600/30 transition-all flex-1 md:flex-none font-medium flex items-center gap-2"
+                :disabled="saving"
+              >
+                <span v-if="saving" class="loading loading-spinner loading-sm"></span>
+                <span v-else>💾</span>
+                บันทึกการเปลี่ยนแปลง
+              </button>
+            </template>
+            <div v-else class="flex items-center px-4 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium border border-slate-200">
+              🔒 เฉพาะแอดมิน
+            </div>
           </div>
         </div>
 
@@ -156,26 +167,26 @@ onMounted(() => {
             <div class="p-6 space-y-5 bg-slate-50/30">
               <div class="form-control">
                 <label class="label pb-1"><span class="label-text font-medium text-slate-700">รหัสนักเรียน</span></label>
-                <input v-model="form.student_id" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11" />
+                <input :disabled="!isAdmin" v-model="form.student_id" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" />
               </div>
               <div class="grid grid-cols-2 gap-5">
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">คำนำหน้า</span></label>
-                  <input v-model="form.prefix" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11" />
+                  <input :disabled="!isAdmin" v-model="form.prefix" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" />
                 </div>
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">ชื่อเล่น</span></label>
-                  <input v-model="form.nickname" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11" />
+                  <input :disabled="!isAdmin" v-model="form.nickname" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" />
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-5">
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">ชื่อ <span class="text-red-500">*</span></span></label>
-                  <input v-model="form.first_name" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11" required />
+                  <input :disabled="!isAdmin" v-model="form.first_name" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" required />
                 </div>
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">นามสกุล <span class="text-red-500">*</span></span></label>
-                  <input v-model="form.last_name" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11" required />
+                  <input :disabled="!isAdmin" v-model="form.last_name" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" required />
                 </div>
               </div>
             </div>
@@ -190,16 +201,16 @@ onMounted(() => {
               <div class="grid grid-cols-2 gap-5">
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">กรุ๊ปเลือด</span></label>
-                  <input v-model="form.blood_group" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11" placeholder="A, B, O, AB" />
+                  <input :disabled="!isAdmin" v-model="form.blood_group" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="A, B, O, AB" />
                 </div>
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">ไซส์เสื้อ</span></label>
-                  <input v-model="form.shirt_size" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11" placeholder="S, M, L, XL" />
+                  <input :disabled="!isAdmin" v-model="form.shirt_size" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="S, M, L, XL" />
                 </div>
               </div>
               <div class="form-control">
                 <label class="label pb-1"><span class="label-text font-medium text-slate-700">โรคประจำตัว / แพ้อาหาร</span></label>
-                <input v-model="form.food_allergy" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11" placeholder="ถ้าไม่มีให้ระบุ 'ไม่มี'" />
+                <input :disabled="!isAdmin" v-model="form.food_allergy" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="ถ้าไม่มีให้ระบุ 'ไม่มี'" />
               </div>
             </div>
           </div>
@@ -212,26 +223,26 @@ onMounted(() => {
             <div class="p-6 space-y-5 bg-slate-50/30">
               <div class="form-control">
                 <label class="label pb-1"><span class="label-text font-medium text-slate-700">เบอร์โทรศัพท์</span></label>
-                <input v-model="form.phone_number" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11" />
+                <input :disabled="!isAdmin" v-model="form.phone_number" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
               </div>
               <div class="grid grid-cols-2 gap-5">
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">เบอร์ผู้ปกครอง</span></label>
-                  <input v-model="form.phone_number_parent" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11" />
+                  <input :disabled="!isAdmin" v-model="form.phone_number_parent" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                 </div>
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">เกี่ยวข้องเป็น</span></label>
-                  <input v-model="form.phone_number_parent_relation" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11" placeholder="เช่น บิดา, มารดา" />
+                  <input :disabled="!isAdmin" v-model="form.phone_number_parent_relation" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="เช่น บิดา, มารดา" />
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-5">
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">Line ID</span></label>
-                  <input v-model="form.line_id" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11" />
+                  <input :disabled="!isAdmin" v-model="form.line_id" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                 </div>
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">IG Username</span></label>
-                  <input v-model="form.ig_username" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11" />
+                  <input :disabled="!isAdmin" v-model="form.ig_username" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                 </div>
               </div>
             </div>
@@ -246,16 +257,16 @@ onMounted(() => {
               <div class="grid grid-cols-2 gap-5">
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">คณะที่ใฝ่ฝัน</span></label>
-                  <input v-model="form.target_faculty" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 h-11" />
+                  <input :disabled="!isAdmin" v-model="form.target_faculty" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                 </div>
                 <div class="form-control">
                   <label class="label pb-1"><span class="label-text font-medium text-slate-700">เวรทำความสะอาด</span></label>
-                  <input v-model="form.cleaning_duty" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 h-11" placeholder="เช่น วันจันทร์" />
+                  <input :disabled="!isAdmin" v-model="form.cleaning_duty" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="เช่น วันจันทร์" />
                 </div>
               </div>
               <div class="form-control flex-grow">
                 <label class="label pb-1"><span class="label-text font-medium text-slate-700">สอวน. / ค่ายวิชาการ</span></label>
-                <textarea v-model="form.olympic_camp" class="textarea textarea-bordered w-full h-32 bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 text-base py-3 leading-relaxed" placeholder="ระบุค่ายวิชาการที่เคยเข้าร่วม (เว้นบรรทัดได้)"></textarea>
+                <textarea :disabled="!isAdmin" v-model="form.olympic_camp" class="textarea textarea-bordered w-full h-32 bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 text-base py-3 leading-relaxed disabled:bg-slate-100" placeholder="ระบุค่ายวิชาการที่เคยเข้าร่วม (เว้นบรรทัดได้)"></textarea>
               </div>
             </div>
           </div>
@@ -267,7 +278,7 @@ onMounted(() => {
                 <h3 class="font-bold text-orange-800 text-lg">ผลงาน / รางวัลที่เคยได้รับ</h3>
               </div>
               <div class="p-6 bg-slate-50/30">
-                <textarea v-model="form.portfolio" class="textarea textarea-bordered w-full h-48 bg-white border-slate-300 shadow-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 text-slate-800 text-base p-4 leading-relaxed" placeholder="เล่าผลงานเด่นๆ หรือรางวัลที่ประทับใจของคุณที่นี่... (สามารถเว้นบรรทัดและพิมพ์ยาวๆ ได้เลย)"></textarea>
+                <textarea :disabled="!isAdmin" v-model="form.portfolio" class="textarea textarea-bordered w-full h-48 bg-white border-slate-300 shadow-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 text-slate-800 text-base p-4 leading-relaxed disabled:bg-slate-100" placeholder="เล่าผลงานเด่นๆ หรือรางวัลที่ประทับใจของคุณที่นี่... (สามารถเว้นบรรทัดและพิมพ์ยาวๆ ได้เลย)"></textarea>
               </div>
             </div>
           </div>
@@ -282,27 +293,27 @@ onMounted(() => {
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
                   <div class="form-control">
                     <label class="label pb-1"><span class="label-text font-medium text-slate-700">บ้านเลขที่/หมู่/ซอย</span></label>
-                    <input v-model="form.address_house_no" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11" />
+                    <input :disabled="!isAdmin" v-model="form.address_house_no" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                   </div>
                   <div class="form-control">
                     <label class="label pb-1"><span class="label-text font-medium text-slate-700">ถนน</span></label>
-                    <input v-model="form.address_road" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11" />
+                    <input :disabled="!isAdmin" v-model="form.address_road" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                   </div>
                   <div class="form-control">
                     <label class="label pb-1"><span class="label-text font-medium text-slate-700">ตำบล / แขวง</span></label>
-                    <input v-model="form.address_sub_district" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11" />
+                    <input :disabled="!isAdmin" v-model="form.address_sub_district" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                   </div>
                   <div class="form-control">
                     <label class="label pb-1"><span class="label-text font-medium text-slate-700">อำเภอ / เขต</span></label>
-                    <input v-model="form.address_district" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11" />
+                    <input :disabled="!isAdmin" v-model="form.address_district" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                   </div>
                   <div class="form-control md:col-span-1 lg:col-span-2">
                     <label class="label pb-1"><span class="label-text font-medium text-slate-700">จังหวัด</span></label>
-                    <input v-model="form.address_province" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11" />
+                    <input :disabled="!isAdmin" v-model="form.address_province" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                   </div>
                   <div class="form-control md:col-span-1 lg:col-span-2">
                     <label class="label pb-1"><span class="label-text font-medium text-slate-700">รหัสไปรษณีย์</span></label>
-                    <input v-model="form.address_post_code" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11" />
+                    <input :disabled="!isAdmin" v-model="form.address_post_code" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
                   </div>
                 </div>
               </div>

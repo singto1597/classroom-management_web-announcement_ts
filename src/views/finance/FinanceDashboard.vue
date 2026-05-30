@@ -5,10 +5,12 @@ import type { FinanceSummary, Account } from '@/types/finance';
 import { Doughnut } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, CategoryScale } from 'chart.js';
 
+import { useAuthStore } from '@/stores/auth';
+
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale);
 
-// Mock Data
-const currentServerId = '1500761770468315248';
+const authStore = useAuthStore();
+const currentServerId = authStore.currentRoomId!;
 
 const summary = ref<FinanceSummary | null>(null);
 const accounts = ref<Account[]>([]);
@@ -211,6 +213,7 @@ watch([selectedMonth, selectedYear], () => {
         </RouterLink>
 
         <RouterLink 
+          v-if="authStore.isAdmin"
           to="/finance/settings"
           class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all flex flex-col items-center gap-2 group"
         >
@@ -227,6 +230,7 @@ watch([selectedMonth, selectedYear], () => {
           <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold text-gray-800">กระเป๋าเงินห้อง</h3>
             <RouterLink 
+              v-if="authStore.isAdmin"
               to="/finance/settings" 
               class="text-sm font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition"
             >

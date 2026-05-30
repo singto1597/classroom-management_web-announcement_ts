@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { StudentService } from '@/services/student'
 import Swal from 'sweetalert2'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
-// --- Mock Data ---
-const currentServerId = '1500761770468315248'
-const currentUserName = 'singto1597'
+// --- นำ Mock Data ออก แล้วดึงจาก Store ---
+const currentServerId = authStore.currentRoomId!
+const currentUserName = authStore.currentUserName!
+const isAdmin = computed(() => authStore.isAdmin)
 
 // --- State ---
 const activeTab = ref<'single' | 'bulk'>('single')
@@ -26,6 +29,10 @@ const bulkData = ref('')
 
 // --- Methods ---
 const submitSingle = async () => {
+  if (!isAdmin.value) {
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่เพิ่มข้อมูลนักเรียนได้', 'error')
+  }
+
   if (!singleForm.value.student_no || !singleForm.value.first_name || !singleForm.value.last_name) {
     Swal.fire('กรุณากรอกข้อมูลให้ครบ', '', 'warning')
     return
@@ -49,6 +56,10 @@ const submitSingle = async () => {
 }
 
 const submitBulk = async () => {
+  if (!isAdmin.value) {
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่เพิ่มข้อมูลนักเรียนได้', 'error')
+  }
+
   if (!bulkData.value.trim()) {
     Swal.fire('กรุณาใส่ข้อมูล', '', 'warning')
     return
@@ -88,7 +99,6 @@ const submitBulk = async () => {
 
 <template>
   <div class="p-6 max-w-4xl mx-auto">
-    <!-- Header -->
     <div class="flex items-center gap-4 mb-8">
       <button 
         @click="router.back()" 
@@ -99,7 +109,6 @@ const submitBulk = async () => {
       <h1 class="text-2xl font-bold text-gray-800">เพิ่มนักเรียนใหม่</h1>
     </div>
 
-    <!-- Tabs -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div class="flex border-b border-gray-100">
         <button
@@ -118,9 +127,7 @@ const submitBulk = async () => {
         </button>
       </div>
 
-      <!-- Form Content -->
       <div class="p-8">
-        <!-- Single Add -->
         <div v-if="activeTab === 'single'" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="space-y-2">
@@ -152,18 +159,22 @@ const submitBulk = async () => {
             </div>
           </div>
           <div class="pt-4">
-            <button
-              @click="submitSingle"
-              :disabled="isSubmitting"
-              class="w-full md:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center"
-            >
-              <span v-if="isSubmitting" class="animate-spin me-2"><i class="bi bi-arrow-repeat"></i></span>
-              <i v-else class="bi bi-check-lg me-2"></i> บันทึกข้อมูล
-            </button>
+            <template v-if="isAdmin">
+              <button
+                @click="submitSingle"
+                :disabled="isSubmitting"
+                class="w-full md:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center"
+              >
+                <span v-if="isSubmitting" class="animate-spin me-2"><i class="bi bi-arrow-repeat"></i></span>
+                <i v-else class="bi bi-check-lg me-2"></i> บันทึกข้อมูล
+              </button>
+            </template>
+            <div v-else class="text-center p-4 bg-gray-50 text-gray-500 rounded-xl font-bold border border-gray-200 inline-block w-full md:w-auto">
+              <i class="bi bi-lock-fill me-1 text-rose-500"></i> เฉพาะแอดมินเท่านั้น
+            </div>
           </div>
         </div>
 
-        <!-- Bulk Add -->
         <div v-if="activeTab === 'bulk'" class="space-y-6">
           <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-4">
             <h4 class="text-amber-800 font-bold text-sm mb-1"><i class="bi bi-info-circle-fill me-1"></i> คำแนะนำการใช้งาน:</h4>
@@ -179,14 +190,19 @@ const submitBulk = async () => {
             ></textarea>
           </div>
           <div class="pt-4">
-            <button
-              @click="submitBulk"
-              :disabled="isSubmitting"
-              class="w-full md:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center"
-            >
-              <span v-if="isSubmitting" class="animate-spin me-2"><i class="bi bi-arrow-repeat"></i></span>
-              <i v-else class="bi bi-rocket-takeoff-fill me-2"></i> นำเข้าข้อมูลทั้งหมด
-            </button>
+            <template v-if="isAdmin">
+              <button
+                @click="submitBulk"
+                :disabled="isSubmitting"
+                class="w-full md:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold rounded-xl shadow-lg shadow-blue-200 transition-all flex items-center justify-center"
+              >
+                <span v-if="isSubmitting" class="animate-spin me-2"><i class="bi bi-arrow-repeat"></i></span>
+                <i v-else class="bi bi-rocket-takeoff-fill me-2"></i> นำเข้าข้อมูลทั้งหมด
+              </button>
+            </template>
+            <div v-else class="text-center p-4 bg-gray-50 text-gray-500 rounded-xl font-bold border border-gray-200 inline-block w-full md:w-auto">
+              <i class="bi bi-lock-fill me-1 text-rose-500"></i> เฉพาะแอดมินเท่านั้น
+            </div>
           </div>
         </div>
       </div>

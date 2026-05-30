@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useAuthStore } from '@/stores/auth'; // เพิ่ม import authStore
 import { FinanceService } from '@/services/finance';
 import type { Account, Category } from '@/types/finance';
 import Swal from 'sweetalert2';
 
-// Mock Data
-const currentServerId = '1500761770468315248';
-const currentUserName = 'singto1597';
+const authStore = useAuthStore();
+
+// ดึงค่าจาก Store แทน Mock Data เดิม
+const currentServerId = authStore.currentRoomId!;
+const currentUserName = authStore.currentUserName!;
+const isAdmin = computed(() => authStore.isAdmin); // ดึง isAdmin มาใช้งาน
 
 const accounts = ref<Account[]>([]);
 const categories = ref<Category[]>([]);
@@ -34,6 +38,8 @@ const expenseCategories = computed(() => categories.value.filter(c => c.category
 // --- Account Actions ---
 
 const handleAddAccount = async () => {
+  if (!isAdmin.value) return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้น', 'error');
+
   const { value: formValues } = await Swal.fire({
     title: 'เพิ่มกระเป๋าเงินใหม่',
     html:
@@ -66,6 +72,8 @@ const handleAddAccount = async () => {
 };
 
 const handleEditAccount = async (account: Account) => {
+  if (!isAdmin.value) return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้น', 'error');
+
   const { value: name } = await Swal.fire({
     title: 'แก้ไขชื่อกระเป๋าเงิน',
     input: 'text',
@@ -91,6 +99,8 @@ const handleEditAccount = async (account: Account) => {
 };
 
 const handleDeleteAccount = async (id: number) => {
+  if (!isAdmin.value) return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้น', 'error');
+
   const result = await Swal.fire({
     title: 'ยืนยันการลบ?',
     text: 'หากลบแล้วข้อมูลประวัติที่เกี่ยวข้องอาจได้รับผลกระทบ',
@@ -115,6 +125,8 @@ const handleDeleteAccount = async (id: number) => {
 // --- Category Actions ---
 
 const handleAddCategory = async () => {
+  if (!isAdmin.value) return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้น', 'error');
+
   const { value: formValues } = await Swal.fire({
     title: 'เพิ่มหมวดหมู่ใหม่',
     html:
@@ -150,6 +162,8 @@ const handleAddCategory = async () => {
 };
 
 const handleEditCategory = async (category: Category) => {
+  if (!isAdmin.value) return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้น', 'error');
+
   const { value: name } = await Swal.fire({
     title: 'แก้ไขชื่อหมวดหมู่',
     input: 'text',
@@ -175,6 +189,8 @@ const handleEditCategory = async (category: Category) => {
 };
 
 const handleDeleteCategory = async (id: number) => {
+  if (!isAdmin.value) return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้น', 'error');
+
   const result = await Swal.fire({
     title: 'ลบหมวดหมู่?',
     text: 'การลบหมวดหมู่อาจส่งผลต่อการจัดกลุ่มรายงาน',
@@ -207,7 +223,6 @@ const formatNumber = (num: number) => {
 
 <template>
   <div class="p-4 md:p-8 max-w-6xl mx-auto">
-    <!-- Header -->
     <div class="mb-8 flex items-center gap-4">
       <RouterLink 
         to="/finance"
@@ -224,19 +239,18 @@ const formatNumber = (num: number) => {
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      <!-- Wallets Section -->
       <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden h-fit">
         <div class="p-6 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
           <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
             <i class="bi bi-wallet2 text-blue-500"></i> กระเป๋าเงินห้อง
           </h3>
           <button 
+            v-if="isAdmin"
             @click="handleAddAccount"
             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl shadow-sm transition flex items-center gap-2 text-sm"
           >
@@ -258,7 +272,7 @@ const formatNumber = (num: number) => {
                 <h4 class="font-bold text-gray-800">{{ acc.account_name }}</h4>
                 <p class="text-gray-500 text-sm">คงเหลือ: <span class="text-blue-600 font-bold">฿ {{ formatNumber(acc.balance) }}</span></p>
               </div>
-              <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div v-if="isAdmin" class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button @click="handleEditAccount(acc)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="แก้ไข">
                   <i class="bi bi-pencil-square"></i>
                 </button>
@@ -271,13 +285,13 @@ const formatNumber = (num: number) => {
         </div>
       </div>
 
-      <!-- Categories Section -->
       <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="p-6 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
           <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
             <i class="bi bi-tags text-emerald-500"></i> หมวดหมู่รายการ
           </h3>
           <button 
+            v-if="isAdmin"
             @click="handleAddCategory"
             class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl shadow-sm transition flex items-center gap-2 text-sm"
           >
@@ -287,7 +301,6 @@ const formatNumber = (num: number) => {
 
         <div class="p-6">
           <div class="grid grid-cols-2 gap-6">
-            <!-- Income Categories -->
             <div>
               <h5 class="font-bold text-emerald-600 mb-4 flex items-center gap-2 border-b border-emerald-50 pb-2">
                 🟢 รายรับ
@@ -300,7 +313,7 @@ const formatNumber = (num: number) => {
                   class="bg-emerald-50 text-emerald-700 border border-emerald-100 py-1.5 px-3 rounded-full text-sm font-semibold flex items-center gap-2 group hover:bg-emerald-600 hover:text-white transition-all"
                 >
                   {{ cat.category_name }}
-                  <div class="flex gap-1 overflow-hidden w-0 group-hover:w-10 transition-all duration-300">
+                  <div v-if="isAdmin" class="flex gap-1 overflow-hidden w-0 group-hover:w-10 transition-all duration-300">
                     <i @click.stop="handleEditCategory(cat)" class="bi bi-pencil text-[10px] cursor-pointer hover:scale-125 transition-transform"></i>
                     <i @click.stop="handleDeleteCategory(cat.id)" class="bi bi-x-lg text-[10px] cursor-pointer hover:scale-125 transition-transform"></i>
                   </div>
@@ -308,7 +321,6 @@ const formatNumber = (num: number) => {
               </div>
             </div>
 
-            <!-- Expense Categories -->
             <div>
               <h5 class="font-bold text-rose-600 mb-4 flex items-center gap-2 border-b border-rose-50 pb-2">
                 🔴 รายจ่าย
@@ -321,7 +333,7 @@ const formatNumber = (num: number) => {
                   class="bg-rose-50 text-rose-700 border border-rose-100 py-1.5 px-3 rounded-full text-sm font-semibold flex items-center gap-2 group hover:bg-rose-600 hover:text-white transition-all"
                 >
                   {{ cat.category_name }}
-                  <div class="flex gap-1 overflow-hidden w-0 group-hover:w-10 transition-all duration-300">
+                  <div v-if="isAdmin" class="flex gap-1 overflow-hidden w-0 group-hover:w-10 transition-all duration-300">
                     <i @click.stop="handleEditCategory(cat)" class="bi bi-pencil text-[10px] cursor-pointer hover:scale-125 transition-transform"></i>
                     <i @click.stop="handleDeleteCategory(cat.id)" class="bi bi-x-lg text-[10px] cursor-pointer hover:scale-125 transition-transform"></i>
                   </div>

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
 import { FinanceService } from '@/services/finance';
 import type { Collection } from '@/types/finance';
 import Swal from 'sweetalert2';
 
-// Mock Data
-const currentServerId = '1500761770468315248';
-const currentUserName = 'singto1597';
+const authStore = useAuthStore();
+const currentServerId = authStore.currentRoomId!;
+const currentUserName = authStore.currentUserName!;
 
 const collections = ref<Collection[]>([]);
 const isLoading = ref(true);
@@ -127,6 +128,7 @@ onMounted(() => {
         </div>
       </div>
       <button 
+        v-if="authStore.isAdmin"
         @click="handleCreateCollection"
         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition flex items-center gap-2"
       >
@@ -169,6 +171,7 @@ onMounted(() => {
               </span>
             </div>
             <button 
+              v-if="authStore.isAdmin"
               @click="handleEditCollection(col)"
               class="text-gray-300 hover:text-gray-600 p-1 rounded-lg transition-colors"
               title="ตั้งค่า"

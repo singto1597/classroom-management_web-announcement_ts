@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import { StudentService } from '@/services/student'
 import type { Student } from '@/types/student'
 import Swal from 'sweetalert2'
 
-// --- Mock Data ---
-const currentServerId = '1500761770468315248'
-const currentUserName = 'singto1597'
+const authStore = useAuthStore()
+
+// --- ถอด Mock Data แล้วใช้จาก Store ---
+const currentServerId = authStore.currentRoomId!
+const currentUserName = authStore.currentUserName!
+const isAdmin = computed(() => authStore.isAdmin)
 
 // --- State ---
 const students = ref<Student[]>([])
@@ -14,7 +18,6 @@ const isLoading = ref(true)
 const searchQuery = ref('')
 const showInactive = ref(false)
 
-// --- Computed ---
 // --- Computed ---
 const filteredStudents = computed(() => {
   // 1. กันไว้ก่อน ถ้า students.value ยังเป็น null/undefined/ว่าง
@@ -66,6 +69,11 @@ const fetchStudents = async () => {
 }
 
 const confirmDelete = async (student: Student) => {
+  // Guard ดักไว้ฝั่ง Script ด้วย
+  if (!isAdmin.value) {
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่ลบข้อมูลได้', 'error')
+  }
+
   const result = await Swal.fire({
     title: 'ยืนยันการลบ?',
     text: `คุณต้องการลบ ${student.first_name} ${student.last_name} (เลขที่ ${student.student_no}) ใช่หรือไม่?`,
@@ -99,12 +107,12 @@ onMounted(() => {
 
 <template>
   <div class="p-6">
-    <!-- Header Section -->
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-gray-800">
         <i class="bi bi-people-fill me-2"></i>รายชื่อนักเรียน
       </h1>
       <RouterLink
+        v-if="isAdmin"
         to="/students/add"
         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm transition-all flex items-center"
       >
@@ -112,7 +120,6 @@ onMounted(() => {
       </RouterLink>
     </div>
 
-    <!-- Filters Section -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-4 items-center justify-between">
       <div class="relative flex-1 min-w-[200px]">
         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
@@ -135,7 +142,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="isLoading" class="flex justify-center items-center py-20">
       <div
         class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
@@ -143,7 +149,6 @@ onMounted(() => {
       <span class="ms-3 text-gray-600">กำลังโหลดข้อมูล...</span>
     </div>
 
-    <!-- Table Section -->
     <div v-else class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -204,24 +209,25 @@ onMounted(() => {
                   >
                     <i class="bi bi-eye"></i>
                   </RouterLink>
-                  <RouterLink
-                    :to="`/students/${student.student_no}/edit`"
-                    class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </RouterLink>
-                  <button
-                    @click="confirmDelete(student)"
-                    class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                    title="ลบ"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
+                  <template v-if="isAdmin">
+                    <RouterLink
+                      :to="`/students/${student.student_no}/edit`"
+                      class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors"
+                      title="แก้ไข"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </RouterLink>
+                    <button
+                      @click="confirmDelete(student)"
+                      class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                      title="ลบ"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </template>
                 </div>
               </td>
             </tr>
-            <!-- Empty State -->
             <tr v-if="filteredStudents.length === 0">
               <td colspan="6" class="py-10 text-center text-gray-400 italic">
                 ไม่พบข้อมูลนักเรียนที่ตรงตามเงื่อนไข

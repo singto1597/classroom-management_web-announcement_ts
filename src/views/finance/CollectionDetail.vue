@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth'; // เพิ่ม import authStore
 import { FinanceService } from '@/services/finance';
 import type { CollectionStatus, Account, StudentPaymentDetail } from '@/types/finance';
 import Swal from 'sweetalert2';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore(); // เรียกใช้ authStore
 
-// Mock Data
-const currentServerId = '1500761770468315248';
-const currentUserName = 'singto1597';
+// ดึงข้อมูลจริงจาก Store แทน Mock Data
+const currentServerId = authStore.currentRoomId!;
+const currentUserName = authStore.currentUserName!;
+const isAdmin = computed(() => authStore.isAdmin);
 
 const collectionId = Number(route.params.id);
 const data = ref<CollectionStatus | null>(null);
@@ -40,6 +43,11 @@ const progress = computed(() => {
 });
 
 const handlePay = async (student: StudentPaymentDetail) => {
+  // ดักฝั่ง Script: ป้องกันคนกดเรียกฟังก์ชันข้าม UI
+  if (!isAdmin.value) {
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่สามารถรับเงินได้', 'error');
+  }
+
   const remaining = student.total_amount - student.paid_amount;
   
   const { value: formValues } = await Swal.fire({
@@ -109,7 +117,6 @@ onMounted(() => {
 
 <template>
   <div class="p-4 md:p-8">
-    <!-- Header Card -->
     <div v-if="data" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-8">
       <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-4">
@@ -140,12 +147,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
 
-    <!-- Students Table -->
     <div v-else-if="data" class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -185,12 +190,18 @@ onMounted(() => {
               </td>
               <td class="px-6 py-4 text-right">
                 <button 
-                  v-if="s.status === 'pending'"
+                  v-if="s.status === 'pending' && isAdmin"
                   @click="handlePay(s)"
                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-xl shadow-sm transition text-xs"
                 >
                   รับเงิน
                 </button>
+                <span 
+                  v-else-if="s.status === 'pending' && !isAdmin" 
+                  class="text-[10px] text-gray-400 italic bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 inline-block"
+                >
+                  รอแอดมินรับยอด
+                </span>
               </td>
             </tr>
           </tbody>

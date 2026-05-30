@@ -3,13 +3,14 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { FinanceService } from '@/services/finance';
 import type { Account, Category } from '@/types/finance';
+import { useAuthStore } from '@/stores/auth';
 import Swal from 'sweetalert2';
 
+const authStore = useAuthStore();
 const router = useRouter();
 
-// Mock Data
-const currentServerId = '1500761770468315248';
-const currentUserName = 'singto1597';
+const currentServerId = authStore.currentRoomId!;
+const currentUserName = authStore.currentUserName!;
 
 const accounts = ref<Account[]>([]);
 const categories = ref<Category[]>([]);
@@ -250,3 +251,4 @@ onMounted(() => {
     </form>
   </div>
 </template>
+

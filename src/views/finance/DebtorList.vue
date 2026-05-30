@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
+import { useAuthStore } from '@/stores/auth';
 import { FinanceService } from '@/services/finance';
 import type { Debtor, StudentDebtProfile, Account, StudentDebtItem } from '@/types/finance';
 import Swal from 'sweetalert2';
 
-// Mock Data
-const currentServerId = '1500761770468315248';
-const currentUserName = 'singto1597';
+const authStore = useAuthStore();
+const currentServerId = authStore.currentRoomId!;
+const currentUserName = authStore.currentUserName!;
+const isAdmin = computed(() => authStore.isAdmin);
 
 const debtors = ref<Debtor[]>([]);
 const accounts = ref<Account[]>([]);
@@ -47,6 +49,12 @@ const fetchDebtors = async () => {
 };
 
 const handleClearDebt = async (debtor: Debtor) => {
+  // ดักฝั่ง Script: ป้องกันคนกดเรียกฟังก์ชันข้าม UI
+  if (!isAdmin.value) {
+    Swal.fire('ไม่มีสิทธิ์เข้าถึง', 'เฉพาะแอดมินเท่านั้นที่สามารถเคลียร์หนี้ได้', 'error');
+    return;
+  }
+
   selectedStudent.value = { id: debtor.student_id, name: debtor.student_name };
   isModalOpen.value = true;
   isLoadingDebts.value = true;
@@ -87,6 +95,11 @@ const totalSelectedAmount = computed(() => {
 });
 
 const handleBatchPay = async () => {
+  // ดักอีกชั้นตอนกดยืนยันจ่ายเงิน
+  if (!isAdmin.value) {
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้น', 'error');
+  }
+
   if (selectedPaymentIds.value.length === 0) {
     return Swal.fire('อ๊ะ!', 'กรุณาเลือกรายการที่ต้องการชำระเงิน', 'warning');
   }
@@ -103,7 +116,7 @@ const handleBatchPay = async () => {
       didOpen: () => Swal.showLoading()
     });
 
-    // ลูปยิงทีละรายการตาม Logic เดิม (ทางเลือกที่ปลอดภัยสำหรับ API ปัจจุบัน)
+    // ลูปยิงทีละรายการตาม Logic เดิม
     const promises = selectedPaymentIds.value.map(pid => {
       return FinanceService.confirmPayment(currentServerId, pid, {
         paid_to_account_id: Number(paidToAccountId.value),
@@ -150,7 +163,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600"></div>
     </div>
@@ -186,11 +198,15 @@ onMounted(() => {
               </td>
               <td class="px-6 py-4 text-right pe-8">
                 <button 
+                  v-if="isAdmin"
                   @click="handleClearDebt(d)"
                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-xl shadow-sm transition text-xs flex items-center gap-2 ml-auto"
                 >
                   <i class="bi bi-wallet2"></i> เคลียร์หนี้
                 </button>
+                <span v-else class="text-xs text-gray-400 italic bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100 inline-block">
+                  <i class="bi bi-lock"></i> รอแอดมินเคลียร์
+                </span>
               </td>
             </tr>
           </tbody>
@@ -198,8 +214,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Batch Pay Modal (Tailwind implementation) -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div v-if="isModalOpen && isAdmin" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h3 class="text-xl font-bold text-gray-800">
