@@ -39,9 +39,8 @@ onMounted(async () => {
     );
     const decoded = JSON.parse(jsonPayload);
 
-    // 4. ดึง discord_id ออกมา (แก้บัค res is not defined ตรงนี้แหละ เปลี่ยนมาใช้ response)
-    // เน้นดึงแบบ String (discord_id_str) ออกมาก่อน เพื่อกัน JavaScript ปัดเศษตัวเลข
-    const discordId = response.discord_id_str || decoded.discord_id_str || String(response.discord_id || decoded.sub);
+    // 4. ดึง discord_id ออกมาจาก Token Payload ตรงๆ เลย
+    const discordId = String(decoded.discord_id || decoded.sub);
 
     if (!discordId) {
       throw new Error('โครงสร้าง Token ไม่ถูกต้อง ไม่พบ Discord ID');
