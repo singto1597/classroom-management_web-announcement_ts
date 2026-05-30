@@ -102,13 +102,22 @@ watch([selectedMonth, selectedYear], () => {
   <div class="p-4 md:p-8">
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
-          📊 สรุปภาพรวมการเงิน
-        </h1>
-        <p class="text-gray-500 mt-1">
-          ประจำเดือน {{ thaiMonths[selectedMonth - 1] }} {{ selectedYear + 543 }}
-        </p>
+      <div class="flex items-center gap-4">
+        <RouterLink 
+          to="/dashboard"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-xl transition shadow-sm group"
+          title="กลับหน้าหลัก"
+        >
+          <i class="bi bi-house-door-fill text-xl"></i>
+        </RouterLink>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+            📊 สรุปภาพรวมการเงิน
+          </h1>
+          <p class="text-gray-500 mt-1">
+            ประจำเดือน {{ thaiMonths[selectedMonth - 1] }} {{ selectedYear + 543 }}
+          </p>
+        </div>
       </div>
 
       <div class="flex gap-2 w-full md:w-auto">
@@ -167,6 +176,49 @@ watch([selectedMonth, selectedYear], () => {
           <p class="text-rose-100 text-sm font-semibold mb-2">รายจ่าย ({{ thaiMonths[selectedMonth - 1] }})</p>
           <h2 class="text-2xl md:text-3xl font-extrabold">฿ {{ formatNumber(summary.total_expense) }}</h2>
         </div>
+      </div>
+
+      <!-- Quick Menu -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <RouterLink 
+          to="/finance/transactions"
+          class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all flex flex-col items-center gap-2 group"
+        >
+          <div class="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+            <i class="bi bi-list-task text-xl"></i>
+          </div>
+          <span class="text-sm font-bold text-gray-700">ประวัติรายการ</span>
+        </RouterLink>
+
+        <RouterLink 
+          to="/finance/collections"
+          class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all flex flex-col items-center gap-2 group"
+        >
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <i class="bi bi-folder2-open text-xl"></i>
+          </div>
+          <span class="text-sm font-bold text-gray-700">โปรเจกต์เก็บเงิน</span>
+        </RouterLink>
+
+        <RouterLink 
+          to="/finance/debtors"
+          class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all flex flex-col items-center gap-2 group"
+        >
+          <div class="p-3 bg-rose-50 text-rose-600 rounded-xl group-hover:bg-rose-600 group-hover:text-white transition-colors">
+            <i class="bi bi-exclamation-triangle text-xl"></i>
+          </div>
+          <span class="text-sm font-bold text-gray-700">ยอดค้างจ่าย</span>
+        </RouterLink>
+
+        <RouterLink 
+          to="/finance/settings"
+          class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all flex flex-col items-center gap-2 group"
+        >
+          <div class="p-3 bg-amber-50 text-amber-600 rounded-xl group-hover:bg-amber-600 group-hover:text-white transition-colors">
+            <i class="bi bi-gear-fill text-xl"></i>
+          </div>
+          <span class="text-sm font-bold text-gray-700">ตั้งค่าการเงิน</span>
+        </RouterLink>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -134,11 +134,20 @@ onMounted(() => {
 
 <template>
   <div class="p-4 md:p-8">
-    <div class="mb-8">
-      <h1 class="text-2xl md:text-3xl font-bold text-rose-600 flex items-center gap-2">
-        <i class="bi bi-exclamation-triangle-fill"></i> สรุปผู้ค้างชำระ (ทวงหนี้รวม)
-      </h1>
-      <p class="text-gray-500 mt-1">รายชื่อผู้ค้างจ่ายเงินจากทุกโปรเจกต์ (รวมโปรเจกต์ที่ปิดไปแล้ว)</p>
+    <div class="mb-8 flex items-center gap-4">
+      <RouterLink 
+        to="/finance"
+        class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-xl transition shadow-sm group"
+        title="กลับหน้าภาพรวม"
+      >
+        <i class="bi bi-arrow-left text-xl"></i>
+      </RouterLink>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-rose-600 flex items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill"></i> สรุปผู้ค้างชำระ (ทวงหนี้รวม)
+        </h1>
+        <p class="text-gray-500 mt-1">รายชื่อผู้ค้างจ่ายเงินจากทุกโปรเจกต์ (รวมโปรเจกต์ที่ปิดไปแล้ว)</p>
+      </div>
     </div>
 
     <!-- Loading State -->

@@ -112,15 +112,18 @@ onMounted(() => {
     <!-- Header Card -->
     <div v-if="data" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 mb-8">
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-xl md:text-2xl font-extrabold text-gray-800">
-          รายการ: Collection #{{ data.collection_id }}
-        </h1>
-        <button 
-          @click="router.back()"
-          class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2 px-4 rounded-xl transition flex items-center gap-2 text-sm"
-        >
-          <i class="bi bi-arrow-left"></i> กลับ
-        </button>
+        <div class="flex items-center gap-4">
+          <RouterLink 
+            to="/finance/collections"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-xl transition shadow-sm group"
+            title="กลับหน้าโครงการ"
+          >
+            <i class="bi bi-arrow-left text-xl"></i>
+          </RouterLink>
+          <h1 class="text-xl md:text-2xl font-extrabold text-gray-800">
+            รายการ: Collection #{{ data.collection_id }}
+          </h1>
+        </div>
       </div>
 
       <div class="space-y-2">

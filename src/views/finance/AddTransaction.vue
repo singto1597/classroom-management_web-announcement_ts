@@ -100,13 +100,16 @@ onMounted(() => {
 <template>
   <div class="p-4 md:p-8 max-w-2xl mx-auto">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800">บันทึกรายการเงิน</h1>
-      <button 
-        @click="router.back()"
-        class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2 px-4 rounded-xl transition flex items-center gap-2 text-sm"
-      >
-        <i class="bi bi-arrow-left"></i> กลับ
-      </button>
+      <div class="flex items-center gap-4">
+        <RouterLink 
+          to="/finance/transactions"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-xl transition shadow-sm group"
+          title="กลับหน้าประวัติ"
+        >
+          <i class="bi bi-arrow-left text-xl"></i>
+        </RouterLink>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">บันทึกรายการเงิน</h1>
+      </div>
     </div>
 
     <!-- Tabs -->

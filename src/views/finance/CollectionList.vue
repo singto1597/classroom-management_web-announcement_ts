@@ -113,9 +113,18 @@ onMounted(() => {
 <template>
   <div class="p-4 md:p-8">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-      <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">โปรเจกต์เก็บเงิน (Collections)</h1>
-        <p class="text-gray-500 mt-1">จัดการแคมเปญระดมทุนและการเก็บเงินเพื่อนในห้อง</p>
+      <div class="flex items-center gap-4">
+        <RouterLink 
+          to="/finance"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-xl transition shadow-sm group"
+          title="กลับหน้าภาพรวม"
+        >
+          <i class="bi bi-arrow-left text-xl"></i>
+        </RouterLink>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-800">โปรเจกต์เก็บเงิน (Collections)</h1>
+          <p class="text-gray-500 mt-1">จัดการแคมเปญระดมทุนและการเก็บเงินเพื่อนในห้อง</p>
+        </div>
       </div>
       <button 
         @click="handleCreateCollection"
