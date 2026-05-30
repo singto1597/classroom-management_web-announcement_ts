@@ -1,62 +1,74 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { exchangeCodeWithBackend } from '@/services/auth';
 import { useAuthStore } from '@/stores/auth';
+import api from '@/services/api';
+import Swal from 'sweetalert2';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
-const errorMsg = ref<string | null>(null);
+const statusText = ref('กำลังยืนยันตัวตนกับ Discord...');
 
 onMounted(async () => {
   const code = route.query.code as string;
-  
+
   if (!code) {
-    errorMsg.value = 'Authorization code not found.';
+    Swal.fire('ข้อผิดพลาด', 'ไม่พบรหัสยืนยันตัวตน', 'error');
+    router.push('/login');
     return;
   }
 
   try {
-    const response = await exchangeCodeWithBackend(code);
-    authStore.setToken(response.access_token);
+    // 1. ส่ง Code ไปแลก Token จาก Backend
+    const res: any = await api.post(`/api/auth/discord/login?code=${code}`);
+    const token = res.access_token;
+
+    // 2. บันทึก Token ลง Store
+    authStore.setToken(token);
+
+    // 3. 🚨 แกะกล่อง JWT Token เพื่อดึง discordId (จุดที่แก้บัค!)
+    // Token จะมี 3 ส่วนคั่นด้วยจุด (.) ส่วนที่ 2 คือ Payload ที่เก็บข้อมูลไว้
+    const payloadBase64 = token.split('.')[1];
     
-    // หลังจากเก็บ Token แล้วให้พาไปหน้า Dashboard
-    router.push('/dashboard');
-  } catch (err: any) {
-    console.error('Auth failed:', err);
-    errorMsg.value = err.message || 'Authentication failed. Please try again.';
+    // แปลง Base64 ให้เป็น JSON String (รองรับ URL-safe base64)
+    const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    
+    // แปลงเป็น Object
+    const decoded = JSON.parse(jsonPayload);
+
+    // 4. ดึง discordId ออกมา (FastAPI ส่วนใหญ่จะใส่ไอดีไว้ในตัวแปร 'sub')
+    // เผื่อ Backend ส่งมาตรงๆ นอก Token ด้วย เลยเขียนดักไว้ 2 ทาง
+    const discordId = res.discord_id || decoded.sub || decoded.discord_id || decoded.id;
+    
+    if (discordId) {
+      // 5. เซ็ตค่าลง Store ให้เรียบร้อย
+      authStore.setDiscordId(discordId);
+      
+      // 6. พาไปหน้าเลือกห้อง
+      router.push('/select-room'); 
+    } else {
+      throw new Error('ไม่พบข้อมูล Discord ID ใน Token');
+    }
+
+  } catch (error: any) {
+    console.error('Login Error:', error);
+    Swal.fire('เข้าสู่ระบบไม่สำเร็จ', 'การยืนยันตัวตนหมดอายุ หรือมีบางอย่างผิดพลาด', 'error');
+    router.push('/login');
   }
 });
-
-const goBackToLogin = () => {
-  router.push('/login');
-};
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-      <div v-if="!errorMsg">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5865F2] mx-auto mb-4"></div>
-        <h2 class="text-xl font-semibold text-gray-700">Authenticating...</h2>
-        <p class="text-gray-500 mt-2">Please wait while we verify your account.</p>
-      </div>
-
-      <div v-else>
-        <div class="text-red-500 text-5xl mb-4">
-          <i class="bi bi-exclamation-circle"></i>
-        </div>
-        <h2 class="text-xl font-semibold text-gray-800">Authentication Error</h2>
-        <p class="text-gray-600 mt-2 mb-6">{{ errorMsg }}</p>
-        
-        <button 
-          @click="goBackToLogin"
-          class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
-        >
-          Back to Login
-        </button>
-      </div>
-    </div>
+  <div class="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
+    <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mb-6 shadow-sm"></div>
+    <h2 class="text-2xl font-bold text-slate-800 tracking-tight">{{ statusText }}</h2>
+    <p class="text-slate-500 mt-2 font-medium">กรุณารอสักครู่ ระบบกำลังดึงข้อมูลห้องเรียนของคุณ...</p>
   </div>
 </template>
