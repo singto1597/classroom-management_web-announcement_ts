@@ -31,9 +31,15 @@ onMounted(async () => {
 });
 
 const selectRoom = (room: UserRoom) => {
-  // เซ็ตค่าลง Store ปุ๊บ หลุดจากกับดัก Router ปั๊บ
-  authStore.setRoom(room.server_id, room.role, authStore.currentUserName || 'User');
-  router.push('/dashboard'); // เปลี่ยนไปหน้า Bento Grid
+  // บังคับใช้ server_id_str ที่เป็น String 100% จาก Backend
+  const safeServerId = room.server_id_str; 
+  
+  if (!safeServerId) {
+    return Swal.fire('Error', 'ไม่พบ Server ID ที่ถูกต้อง', 'error');
+  }
+
+  authStore.setRoom(safeServerId, room.role, authStore.currentUserName || 'User');
+  router.push('/dashboard'); 
 };
 </script>
 

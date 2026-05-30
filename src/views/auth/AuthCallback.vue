@@ -40,8 +40,8 @@ onMounted(async () => {
     const decoded = JSON.parse(jsonPayload);
 
     // 4. ดึง discord_id ออกมา (ตามที่ auth_service.py สร้างไว้)
-    const discordId = decoded.discord_id;
-
+    const discordId = res.discord_id_str || decoded.discord_id_str || String(res.discord_id || decoded.sub);
+    
     if (!discordId) {
       throw new Error('โครงสร้าง Token ไม่ถูกต้อง ไม่พบ Discord ID');
     }
