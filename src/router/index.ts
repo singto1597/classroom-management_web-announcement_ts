@@ -27,6 +27,12 @@ const router = createRouter({
           redirect: '/dashboard'
         },
         {
+          path: '/select-room',
+          name: 'select-room',
+          component: () => import('@/views/auth/SelectRoom.vue'),
+          meta: { requiresAuth: true } // ไม่ต้องเอาไปใส่ใน MainLayout นะ ให้มันอยู่หน้าเดี่ยวๆ
+        },
+        {
           path: 'dashboard',
           name: 'dashboard',
           component: () => import('@/views/Dashboard.vue'),
@@ -131,12 +137,12 @@ router.beforeEach((to, from) => {
   } 
   
   if (to.path === '/login' && isAuthenticated) {
-    return '/dashboard';
+    return '/select-room';
   }
 
   // 2. ถ้าล็อกอินแล้วแต่ยังไม่ได้เลือกห้อง ให้บังคับไปหน้า Dashboard (ยกเว้นกำลังจะไป Dashboard อยู่แล้ว)
   if (isAuthenticated && !currentRoomId && to.path !== '/dashboard') {
-    return '/dashboard';
+    return '/select-room';
   }
 
   // 3. ตรวจสอบสิทธิ์ Admin (RBAC)
