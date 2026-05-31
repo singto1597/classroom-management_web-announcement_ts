@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import StudentService from '@/services/student'
@@ -14,11 +14,13 @@ const studentNo = route.params.no as string
 const loading = ref(true)
 const saving = ref(false)
 
-const currentServerId = '1500761770468315248'
-const currentUserName = 'singto1597'
+// --- นำ Mock Data ออก แล้วดึงจาก Store ---
+const currentServerId = authStore.currentRoomId!
+const currentUserName = authStore.currentUserName!
+const isAdmin = computed(() => authStore.isAdmin)
 
 const form = ref<Partial<Student>>({
-  student_id: '',
+  student_id: null,
   prefix: '',
   first_name: '',
   last_name: '',
@@ -46,18 +48,14 @@ const form = ref<Partial<Student>>({
 const fetchStudent = async () => {
   try {
     loading.value = true
-    //const serverId = authStore.user?.current_server_id
-    //if (!serverId) throw new Error('ไม่พบข้อมูลเซิร์ฟเวอร์')
-    
-    //const data = await StudentService.getStudentByNo(serverId, studentNo)
-    student.value = await StudentService.getStudentByNo(currentServerId, studentNo)
-    // Pre-fill form (เฉพาะฟิลด์ที่เรามีใน form)
+    const data = await StudentService.getStudentByNo(currentServerId, studentNo)
     Object.keys(form.value).forEach(key => {
       if (key in data) {
         (form.value as any)[key] = (data as any)[key] || ''
       }
     })
   } catch (error: any) {
+    console.error("🔴 สอดแนม Error:", error)
     Swal.fire({
       icon: 'error',
       title: 'เกิดข้อผิดพลาด',
@@ -70,12 +68,12 @@ const fetchStudent = async () => {
 }
 
 const handleSubmit = async () => {
+  if (!isAdmin.value) {
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่แก้ไขข้อมูลนักเรียนได้', 'error')
+  }
+
   try {
     saving.value = true
-    const serverId = authStore.user?.current_server_id
-    if (!serverId) throw new Error('ไม่พบข้อมูลเซิร์ฟเวอร์')
-
-    // Clean payload (ลบ whitespace)
     const payload = { ...form.value }
     Object.keys(payload).forEach(key => {
       if (typeof (payload as any)[key] === 'string') {
@@ -83,7 +81,7 @@ const handleSubmit = async () => {
       }
     })
 
-    await StudentService.updateStudent(serverId, studentNo, payload)
+    await StudentService.updateStudent(currentServerId, studentNo, { ...payload, user_name: currentUserName } as any)
     
     await Swal.fire({
       icon: 'success',
@@ -95,10 +93,11 @@ const handleSubmit = async () => {
     
     router.push(`/students/${studentNo}`)
   } catch (error: any) {
+    console.error("Save Error:", error)
     Swal.fire({
       icon: 'error',
       title: 'บันทึกไม่สำเร็จ',
-      text: error.response?.data?.detail || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
+      text: error.response?.data?.detail || error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
     })
   } finally {
     saving.value = false
@@ -111,197 +110,218 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div v-if="loading" class="flex justify-center items-center h-64">
-      <span class="loading loading-spinner loading-lg text-primary"></span>
+  <div class="min-h-screen bg-slate-100/50 py-10">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div v-if="loading" class="flex flex-col justify-center items-center h-[60vh] gap-4">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="text-slate-500 font-medium animate-pulse">กำลังโหลดข้อมูลโปรไฟล์...</p>
+      </div>
+
+      <form v-else @submit.prevent="handleSubmit" class="max-w-5xl mx-auto space-y-8">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+              </div>
+              <h2 class="text-2xl font-bold text-slate-800">แก้ไขข้อมูลโปรไฟล์</h2>
+            </div>
+            <p class="text-slate-500 text-sm ml-11">รหัสนักเรียน: <span class="font-semibold text-slate-700">#{{ studentNo }}</span> • อัปเดตข้อมูลของคุณให้เป็นปัจจุบัน</p>
+          </div>
+          
+          <div class="flex gap-3 w-full md:w-auto ml-11 md:ml-0">
+            <button 
+              type="button" 
+              @click="router.back()" 
+              class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 border-none flex-1 md:flex-none font-medium"
+              :disabled="saving"
+            >
+              ยกเลิก
+            </button>
+            <template v-if="isAdmin">
+              <button 
+                type="submit" 
+                class="btn bg-blue-600 hover:bg-blue-700 text-white border-none px-8 shadow-lg shadow-blue-600/30 transition-all flex-1 md:flex-none font-medium flex items-center gap-2"
+                :disabled="saving"
+              >
+                <span v-if="saving" class="loading loading-spinner loading-sm"></span>
+                <span v-else>💾</span>
+                บันทึกการเปลี่ยนแปลง
+              </button>
+            </template>
+            <div v-else class="flex items-center px-4 bg-slate-100 text-slate-500 rounded-lg text-sm font-medium border border-slate-200">
+              🔒 เฉพาะแอดมิน
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <div class="card bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden">
+            <div class="border-b border-slate-200 bg-blue-50/50 px-6 py-4 flex items-center gap-3">
+              <span class="text-xl">🔵</span>
+              <h3 class="font-bold text-blue-800 text-lg">ข้อมูลส่วนตัวหลัก</h3>
+            </div>
+            <div class="p-6 space-y-5 bg-slate-50/30">
+              <div class="form-control">
+                <label class="label pb-1"><span class="label-text font-medium text-slate-700">รหัสนักเรียน</span></label>
+                <input :disabled="!isAdmin" v-model="form.student_id" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" />
+              </div>
+              <div class="grid grid-cols-2 gap-5">
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">คำนำหน้า</span></label>
+                  <input :disabled="!isAdmin" v-model="form.prefix" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                </div>
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">ชื่อเล่น</span></label>
+                  <input :disabled="!isAdmin" v-model="form.nickname" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-5">
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">ชื่อ <span class="text-red-500">*</span></span></label>
+                  <input :disabled="!isAdmin" v-model="form.first_name" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" required />
+                </div>
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">นามสกุล <span class="text-red-500">*</span></span></label>
+                  <input :disabled="!isAdmin" v-model="form.last_name" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 text-slate-800 h-11 disabled:bg-slate-100" required />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden">
+            <div class="border-b border-slate-200 bg-red-50/50 px-6 py-4 flex items-center gap-3">
+              <span class="text-xl">🔴</span>
+              <h3 class="font-bold text-red-800 text-lg">ข้อมูลสุขภาพ</h3>
+            </div>
+            <div class="p-6 space-y-5 bg-slate-50/30">
+              <div class="grid grid-cols-2 gap-5">
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">กรุ๊ปเลือด</span></label>
+                  <input :disabled="!isAdmin" v-model="form.blood_group" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="A, B, O, AB" />
+                </div>
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">ไซส์เสื้อ</span></label>
+                  <input :disabled="!isAdmin" v-model="form.shirt_size" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="S, M, L, XL" />
+                </div>
+              </div>
+              <div class="form-control">
+                <label class="label pb-1"><span class="label-text font-medium text-slate-700">โรคประจำตัว / แพ้อาหาร</span></label>
+                <input :disabled="!isAdmin" v-model="form.food_allergy" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-red-400 focus:ring-2 focus:ring-red-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="ถ้าไม่มีให้ระบุ 'ไม่มี'" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden">
+            <div class="border-b border-slate-200 bg-purple-50/50 px-6 py-4 flex items-center gap-3">
+              <span class="text-xl">🟣</span>
+              <h3 class="font-bold text-purple-800 text-lg">ข้อมูลการติดต่อ</h3>
+            </div>
+            <div class="p-6 space-y-5 bg-slate-50/30">
+              <div class="form-control">
+                <label class="label pb-1"><span class="label-text font-medium text-slate-700">เบอร์โทรศัพท์</span></label>
+                <input :disabled="!isAdmin" v-model="form.phone_number" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+              </div>
+              <div class="grid grid-cols-2 gap-5">
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">เบอร์ผู้ปกครอง</span></label>
+                  <input :disabled="!isAdmin" v-model="form.phone_number_parent" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                </div>
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">เกี่ยวข้องเป็น</span></label>
+                  <input :disabled="!isAdmin" v-model="form.phone_number_parent_relation" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="เช่น บิดา, มารดา" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-5">
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">Line ID</span></label>
+                  <input :disabled="!isAdmin" v-model="form.line_id" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                </div>
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">IG Username</span></label>
+                  <input :disabled="!isAdmin" v-model="form.ig_username" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden">
+            <div class="border-b border-slate-200 bg-amber-50/50 px-6 py-4 flex items-center gap-3">
+              <span class="text-xl">📚</span>
+              <h3 class="font-bold text-amber-800 text-lg">วิชาการและหน้าที่</h3>
+            </div>
+            <div class="p-6 space-y-5 bg-slate-50/30 flex flex-col h-full">
+              <div class="grid grid-cols-2 gap-5">
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">คณะที่ใฝ่ฝัน</span></label>
+                  <input :disabled="!isAdmin" v-model="form.target_faculty" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                </div>
+                <div class="form-control">
+                  <label class="label pb-1"><span class="label-text font-medium text-slate-700">เวรทำความสะอาด</span></label>
+                  <input :disabled="!isAdmin" v-model="form.cleaning_duty" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 h-11 disabled:bg-slate-100" placeholder="เช่น วันจันทร์" />
+                </div>
+              </div>
+              <div class="form-control flex-grow">
+                <label class="label pb-1"><span class="label-text font-medium text-slate-700">สอวน. / ค่ายวิชาการ</span></label>
+                <textarea :disabled="!isAdmin" v-model="form.olympic_camp" class="textarea textarea-bordered w-full h-32 bg-white border-slate-300 shadow-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 text-slate-800 text-base py-3 leading-relaxed disabled:bg-slate-100" placeholder="ระบุค่ายวิชาการที่เคยเข้าร่วม (เว้นบรรทัดได้)"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2">
+            <div class="card bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden">
+              <div class="border-b border-slate-200 bg-orange-50/50 px-6 py-4 flex items-center gap-3">
+                <span class="text-xl">🏆</span>
+                <h3 class="font-bold text-orange-800 text-lg">ผลงาน / รางวัลที่เคยได้รับ</h3>
+              </div>
+              <div class="p-6 bg-slate-50/30">
+                <textarea :disabled="!isAdmin" v-model="form.portfolio" class="textarea textarea-bordered w-full h-48 bg-white border-slate-300 shadow-sm focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 text-slate-800 text-base p-4 leading-relaxed disabled:bg-slate-100" placeholder="เล่าผลงานเด่นๆ หรือรางวัลที่ประทับใจของคุณที่นี่... (สามารถเว้นบรรทัดและพิมพ์ยาวๆ ได้เลย)"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-2">
+            <div class="card bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden mb-8">
+              <div class="border-b border-slate-200 bg-gray-100 px-6 py-4 flex items-center gap-3">
+                <span class="text-xl">🏠</span>
+                <h3 class="font-bold text-gray-800 text-lg">ข้อมูลที่อยู่ตามทะเบียนบ้าน</h3>
+              </div>
+              <div class="p-6 bg-slate-50/30">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                  <div class="form-control">
+                    <label class="label pb-1"><span class="label-text font-medium text-slate-700">บ้านเลขที่/หมู่/ซอย</span></label>
+                    <input :disabled="!isAdmin" v-model="form.address_house_no" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label pb-1"><span class="label-text font-medium text-slate-700">ถนน</span></label>
+                    <input :disabled="!isAdmin" v-model="form.address_road" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label pb-1"><span class="label-text font-medium text-slate-700">ตำบล / แขวง</span></label>
+                    <input :disabled="!isAdmin" v-model="form.address_sub_district" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                  </div>
+                  <div class="form-control">
+                    <label class="label pb-1"><span class="label-text font-medium text-slate-700">อำเภอ / เขต</span></label>
+                    <input :disabled="!isAdmin" v-model="form.address_district" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                  </div>
+                  <div class="form-control md:col-span-1 lg:col-span-2">
+                    <label class="label pb-1"><span class="label-text font-medium text-slate-700">จังหวัด</span></label>
+                    <input :disabled="!isAdmin" v-model="form.address_province" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                  </div>
+                  <div class="form-control md:col-span-1 lg:col-span-2">
+                    <label class="label pb-1"><span class="label-text font-medium text-slate-700">รหัสไปรษณีย์</span></label>
+                    <input :disabled="!isAdmin" v-model="form.address_post_code" type="text" class="input input-bordered w-full bg-white border-slate-300 shadow-sm focus:border-gray-400 focus:ring-2 focus:ring-gray-400/20 text-slate-800 h-11 disabled:bg-slate-100" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </form>
     </div>
-
-    <form v-else @submit.prevent="handleSubmit" class="max-w-5xl mx-auto">
-      <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-800">✏️ แก้ไขข้อมูลโปรไฟล์ (#{{ studentNo }})</h2>
-          <p class="text-gray-500">กรอกข้อมูลที่ต้องการแก้ไขและกดบันทึก</p>
-        </div>
-        <div class="flex gap-2">
-          <button 
-            type="button" 
-            @click="router.back()" 
-            class="btn btn-ghost"
-            :disabled="saving"
-          >
-            ยกเลิก
-          </button>
-          <button 
-            type="submit" 
-            class="btn btn-primary px-8 shadow-md"
-            :disabled="saving"
-          >
-            <span v-if="saving" class="loading loading-spinner"></span>
-            💾 บันทึกการเปลี่ยนแปลง
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- ข้อมูลส่วนตัวหลัก -->
-        <div class="card bg-white shadow-sm border border-gray-100">
-          <div class="card-header bg-blue-600 text-white p-4 font-bold rounded-t-2xl">
-            🔵 ข้อมูลส่วนตัวหลัก
-          </div>
-          <div class="card-body p-6 space-y-4">
-            <div class="form-control">
-              <label class="label"><span class="label-text font-semibold">รหัสนักเรียน</span></label>
-              <input v-model="form.student_id" type="text" class="input input-bordered w-full" />
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">คำนำหน้า</span></label>
-                <input v-model="form.prefix" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">ชื่อเล่น</span></label>
-                <input v-model="form.nickname" type="text" class="input input-bordered w-full" />
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">ชื่อ</span></label>
-                <input v-model="form.first_name" type="text" class="input input-bordered w-full" required />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">นามสกุล</span></label>
-                <input v-model="form.last_name" type="text" class="input input-bordered w-full" required />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ข้อมูลสุขภาพ -->
-        <div class="card bg-white shadow-sm border border-gray-100">
-          <div class="card-header bg-red-600 text-white p-4 font-bold rounded-t-2xl">
-            🔴 ข้อมูลสุขภาพ
-          </div>
-          <div class="card-body p-6 space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">กรุ๊ปเลือด</span></label>
-                <input v-model="form.blood_group" type="text" class="input input-bordered w-full" placeholder="A, B, O, AB" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">ไซส์เสื้อ</span></label>
-                <input v-model="form.shirt_size" type="text" class="input input-bordered w-full" placeholder="S, M, L, XL" />
-              </div>
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text font-semibold">โรคประจำตัว/แพ้อาหาร</span></label>
-              <input v-model="form.food_allergy" type="text" class="input input-bordered w-full" />
-            </div>
-          </div>
-        </div>
-
-        <!-- ข้อมูลการติดต่อ -->
-        <div class="card bg-white shadow-sm border border-gray-100">
-          <div class="card-header bg-indigo-600 text-white p-4 font-bold rounded-t-2xl">
-            🟣 ข้อมูลการติดต่อ
-          </div>
-          <div class="card-body p-6 space-y-4">
-            <div class="form-control">
-              <label class="label"><span class="label-text font-semibold">เบอร์โทรศัพท์</span></label>
-              <input v-model="form.phone_number" type="text" class="input input-bordered w-full" />
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">เบอร์ผู้ปกครอง</span></label>
-                <input v-model="form.phone_number_parent" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">เกี่ยวข้องเป็น</span></label>
-                <input v-model="form.phone_number_parent_relation" type="text" class="input input-bordered w-full" placeholder="แม่, พ่อ, ป้า" />
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">Line ID</span></label>
-                <input v-model="form.line_id" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">IG Username</span></label>
-                <input v-model="form.ig_username" type="text" class="input input-bordered w-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- วิชาการ -->
-        <div class="card bg-white shadow-sm border border-gray-100">
-          <div class="card-header bg-yellow-600 text-white p-4 font-bold rounded-t-2xl">
-            📚 วิชาการและหน้าที่
-          </div>
-          <div class="card-body p-6 space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">คณะที่ใฝ่ฝัน</span></label>
-                <input v-model="form.target_faculty" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">เวรทำความสะอาด</span></label>
-                <input v-model="form.cleaning_duty" type="text" class="input input-bordered w-full" />
-              </div>
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text font-semibold">สอวน. / ค่ายวิชาการ</span></label>
-              <textarea v-model="form.olympic_camp" class="textarea textarea-bordered h-20" />
-            </div>
-          </div>
-        </div>
-
-        <!-- ผลงาน -->
-        <div class="md:col-span-2">
-          <div class="card bg-white shadow-sm border border-gray-100">
-            <div class="card-header bg-orange-500 text-white p-4 font-bold rounded-t-2xl">
-              🏆 ผลงาน / รางวัลที่เคยได้รับ
-            </div>
-            <div class="card-body p-6">
-              <textarea v-model="form.portfolio" class="textarea textarea-bordered w-full h-32" placeholder="เล่าผลงานเด่นๆ ของคุณที่นี่..." />
-            </div>
-          </div>
-        </div>
-
-        <!-- ที่อยู่ -->
-        <div class="md:col-span-2">
-          <div class="card bg-white shadow-sm border border-gray-100">
-            <div class="card-header bg-gray-600 text-white p-4 font-bold rounded-t-2xl">
-              🟤 ข้อมูลที่อยู่ตามทะเบียนบ้าน
-            </div>
-            <div class="card-body p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">บ้านเลขที่/หมู่/ซอย</span></label>
-                <input v-model="form.address_house_no" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">ถนน</span></label>
-                <input v-model="form.address_road" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">ตำบล</span></label>
-                <input v-model="form.address_sub_district" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">อำเภอ</span></label>
-                <input v-model="form.address_district" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control md:col-span-2">
-                <label class="label"><span class="label-text font-semibold">จังหวัด</span></label>
-                <input v-model="form.address_province" type="text" class="input input-bordered w-full" />
-              </div>
-              <div class="form-control md:col-span-2">
-                <label class="label"><span class="label-text font-semibold">รหัสไปรษณีย์</span></label>
-                <input v-model="form.address_post_code" type="text" class="input input-bordered w-full" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </form>
   </div>
 </template>

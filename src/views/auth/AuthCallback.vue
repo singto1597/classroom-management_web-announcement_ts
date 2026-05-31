@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { exchangeCodeWithBackend } from '@/services/auth';
 import { useAuthStore } from '@/stores/auth';
+import api from '@/services/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -13,19 +13,48 @@ onMounted(async () => {
   const code = route.query.code as string;
   
   if (!code) {
-    errorMsg.value = 'Authorization code not found.';
+    errorMsg.value = 'ไม่พบรหัสยืนยันตัวตนจาก Discord';
     return;
   }
 
   try {
-    const response = await exchangeCodeWithBackend(code);
-    authStore.setToken(response.access_token);
+    // 1. 🚀 ยิง API ไปหา Backend โดยส่งเป็น JSON Body
+    const response: any = await api.post('/api/auth/discord/login', { 
+      code: code 
+    });
     
-    // หลังจากเก็บ Token แล้วให้พาไปหน้า Dashboard
-    router.push('/dashboard');
+    const token = response.access_token;
+
+    // 2. บันทึก Token ลง Store
+    authStore.setToken(token);
+    
+    // 3. 📦 ถอดรหัส JWT Token
+    const payloadBase64 = token.split('.')[1];
+    const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const decoded = JSON.parse(jsonPayload);
+
+    // 4. ดึง discord_id ออกมาจาก Token Payload ตรงๆ เลย
+    const discordId = String(decoded.discord_id || decoded.sub);
+
+    if (!discordId) {
+      throw new Error('โครงสร้าง Token ไม่ถูกต้อง ไม่พบ Discord ID');
+    }
+
+    // 5. บันทึก Discord ID ลง Store
+    authStore.setDiscordId(discordId);
+
+    // 6. 🎉 ยืนยันตัวตนสำเร็จ! พาไปหน้า "เลือกห้องเรียน"
+    router.push('/select-room');
+
   } catch (err: any) {
     console.error('Auth failed:', err);
-    errorMsg.value = err.message || 'Authentication failed. Please try again.';
+    errorMsg.value = err.response?.data?.detail || err.message || 'การยืนยันตัวตนล้มเหลว กรุณาลองใหม่อีกครั้ง';
   }
 });
 
@@ -35,28 +64,36 @@ const goBackToLogin = () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+  <div class="min-h-screen flex items-center justify-center bg-slate-50">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-10 text-center">
+      
       <div v-if="!errorMsg">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5865F2] mx-auto mb-4"></div>
-        <h2 class="text-xl font-semibold text-gray-700">Authenticating...</h2>
-        <p class="text-gray-500 mt-2">Please wait while we verify your account.</p>
+        <div class="relative w-20 h-20 mx-auto mb-6">
+          <div class="absolute inset-0 rounded-full border-4 border-slate-100"></div>
+          <div class="absolute inset-0 rounded-full border-4 border-[#5865F2] border-t-transparent animate-spin"></div>
+          <i class="bi bi-discord absolute inset-0 flex items-center justify-center text-2xl text-[#5865F2]"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">กำลังยืนยันตัวตน...</h2>
+        <p class="text-slate-500 font-medium">กรุณารอสักครู่ ระบบกำลังเชื่อมต่อกับ Discord</p>
       </div>
 
-      <div v-else>
-        <div class="text-red-500 text-5xl mb-4">
-          <i class="bi bi-exclamation-circle"></i>
+      <div v-else class="animate-in fade-in zoom-in duration-300">
+        <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+          <i class="bi bi-exclamation-triangle-fill text-3xl"></i>
         </div>
-        <h2 class="text-xl font-semibold text-gray-800">Authentication Error</h2>
-        <p class="text-gray-600 mt-2 mb-6">{{ errorMsg }}</p>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">เข้าสู่ระบบไม่สำเร็จ</h2>
+        <p class="text-rose-600 font-medium mb-8 bg-rose-50 p-4 rounded-xl border border-rose-100 text-sm break-words">
+          {{ errorMsg }}
+        </p>
         
         <button 
           @click="goBackToLogin"
-          class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
+          class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2"
         >
-          Back to Login
+          <i class="bi bi-arrow-left"></i> กลับไปหน้าเข้าสู่ระบบ
         </button>
       </div>
+
     </div>
   </div>
 </template>
