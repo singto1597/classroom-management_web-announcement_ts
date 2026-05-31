@@ -117,8 +117,7 @@ const deleteTask = async (taskId: number) => {
     confirmButtonColor: '#e11d48',
     cancelButtonColor: '#94a3b8',
     confirmButtonText: 'ลบข้อมูล',
-    cancelButtonText: 'ยกเลิก',
-    borderRadius: '1rem'
+    cancelButtonText: 'ยกเลิก'
   })
 
   if (result.isConfirmed) {

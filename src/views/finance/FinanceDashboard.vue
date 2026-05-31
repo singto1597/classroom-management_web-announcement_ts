@@ -99,7 +99,7 @@ const chartOptions = {
     animateScale: true,
     animateRotate: true
   }
-};
+} as any ;
 
 const formatNumber = (num: number) => {
   return new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2 }).format(num);

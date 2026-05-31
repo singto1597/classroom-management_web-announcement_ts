@@ -20,7 +20,7 @@ const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
 const form = ref<Partial<Student>>({
-  student_id: '',
+  student_id: null,
   prefix: '',
   first_name: '',
   last_name: '',
@@ -81,7 +81,7 @@ const handleSubmit = async () => {
       }
     })
 
-    await StudentService.updateStudent(currentServerId, studentNo, payload, currentUserName)
+    await StudentService.updateStudent(currentServerId, studentNo, { ...payload, user_name: currentUserName } as any)
     
     await Swal.fire({
       icon: 'success',

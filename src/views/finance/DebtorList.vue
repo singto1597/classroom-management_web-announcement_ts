@@ -39,7 +39,7 @@ const fetchDebtors = async () => {
     
     // Auto-select first account
     if (accounts.value.length > 0) {
-      paidToAccountId.value = accounts.value[0].id.toString();
+      paidToAccountId.value = accounts.value[0]?.id.toString() || '';
     }
   } catch (error: any) {
     Swal.fire('Error', 'โหลดข้อมูลลูกหนี้ไม่สำเร็จ', 'error');
@@ -120,7 +120,7 @@ const handleBatchPay = async () => {
     const promises = selectedPaymentIds.value.map(pid => {
       return FinanceService.confirmPayment(currentServerId, pid, {
         paid_to_account_id: Number(paidToAccountId.value),
-        paid_amount: payAmounts.value[pid],
+        paid_amount: payAmounts.value[pid] || 0,
         slip_image_url: slipImageUrl.value || undefined,
         user_name: currentUserName
       });

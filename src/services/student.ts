@@ -16,7 +16,7 @@ export const StudentService = {
     // ยิงไปที่ endpoint /search เหมือนระบบ PHP เดิม
     const results = await api.get(`/api/classroom/${serverId}/search`, {
       params: { q: studentNo }
-    })
+    }) as any[]
     
     // ถ้าเจอข้อมูล ให้คืนค่าคนแรกใน Array
     if (results && results.length > 0) {

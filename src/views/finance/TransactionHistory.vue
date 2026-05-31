@@ -67,8 +67,7 @@ const handleRevert = async (transaction: Transaction) => {
     confirmButtonColor: '#e11d48',
     cancelButtonColor: '#94a3b8',
     confirmButtonText: 'ยืนยันการยกเลิก',
-    cancelButtonText: 'ปิด',
-    borderRadius: '1rem'
+    cancelButtonText: 'ปิด'
   });
 
   if (result.isConfirmed) {

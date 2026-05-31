@@ -45,7 +45,7 @@ const handleAddTask = async () => {
   
   try {
     await TaskService.createTask(currentServerId, {
-      ...taskForm,
+      ...(taskForm as any),
       user_name: currentUserName
     })
     await Swal.fire({
@@ -72,7 +72,7 @@ const handleAddNote = async () => {
   
   try {
     await TaskService.createDailyNote(currentServerId, {
-      ...noteForm,
+      ...(noteForm as any),
       user_name: currentUserName
     })
     await Swal.fire({

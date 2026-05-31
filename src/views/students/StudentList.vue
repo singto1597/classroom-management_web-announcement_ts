@@ -36,7 +36,7 @@ const filteredStudents = computed(() => {
     // ใช้ Optional Chaining (?.) และ Nullish Coalescing (|| '') เพื่อกัน Error
     const fullName = `${student.first_name || ''} ${student.last_name || ''}`.toLowerCase()
     const studentNo = student.student_no?.toString() || ''
-    const studentId = student.student_id?.toLowerCase() || ''
+    const studentId = student.student_id?.toString().toLowerCase() || ''
     const nickname = student.nickname?.toLowerCase() || ''
 
     return (

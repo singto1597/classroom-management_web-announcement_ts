@@ -68,7 +68,7 @@ const handleSaveOverride = async () => {
   
   try {
     await ScheduleService.saveOverride(currentServerId, {
-      ...overrideForm,
+      ...(overrideForm as any),
       user_name: currentUserName
     })
     Swal.fire({
