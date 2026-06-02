@@ -13,18 +13,8 @@ export const StudentService = {
    * ดึงข้อมูลนักเรียนรายคน (ตามเลขที่)
    */
   async getStudentByNo(serverId: string, studentNo: string | number): Promise<Student> {
-    // ยิงไปที่ endpoint /search เหมือนระบบ PHP เดิม
-    const results = await api.get(`/api/classroom/${serverId}/search`, {
-      params: { q: studentNo }
-    }) as any[]
-    
-    // ถ้าเจอข้อมูล ให้คืนค่าคนแรกใน Array
-    if (results && results.length > 0) {
-      return results[0]
-    }
-    
-    // ถ้าไม่เจอให้โยน Error
-    throw new Error('ไม่พบข้อมูลนักเรียนหมายเลขนี้')
+    // เปลี่ยนจาก API /search มาเป็น API เฉพาะที่เราสร้างไว้
+    return await api.get(`/api/classroom/${serverId}/students/profile/${studentNo}`) as Student
   },
 
   async getMyProfile(serverId: string) { 
