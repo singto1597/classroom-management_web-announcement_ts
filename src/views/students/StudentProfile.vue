@@ -153,7 +153,14 @@ onMounted(() => {
                     </div>
                     <div>
                       <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">เบอร์โทรศัพท์</p>
-                      <p class="text-slate-800 font-extrabold text-base md:text-lg">{{ student.phone_number || '-' }}</p>
+                      <template v-if="student.phone_number === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 mt-0.5 rounded-md bg-slate-100 text-slate-400 text-xs font-bold border border-slate-200">
+                          <i class="bi bi-lock-fill text-slate-300"></i> ปิดบังข้อมูล
+                        </span>
+                      </template>
+                      <template v-else>
+                        <p class="text-slate-800 font-extrabold text-base md:text-lg">{{ student.phone_number || '-' }}</p>
+                      </template>
                     </div>
                   </div>
                   
@@ -188,9 +195,19 @@ onMounted(() => {
                   <div class="mt-1 w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
                     <i class="bi bi-house-door-fill text-sm"></i>
                   </div>
-                  <p class="text-slate-700 leading-relaxed font-bold text-sm md:text-base">
-                    {{ student.address_house_no ? `${student.address_house_no} ถ.${student.address_road || '-'} ต.${student.address_sub_district || '-'} อ.${student.address_district || '-'} จ.${student.address_province || '-'} ${student.address_post_code || ''}` : 'ไม่มีข้อมูลที่อยู่' }}
-                  </p>
+                  <div class="text-slate-700 leading-relaxed font-bold text-sm md:text-base w-full">
+                    <template v-if="student.address_house_no === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                      <div class="flex items-center gap-2 text-emerald-600/60 bg-emerald-100/50 px-3 py-2 rounded-xl border border-emerald-200/50 w-fit">
+                        <i class="bi bi-shield-lock-fill text-lg"></i>
+                        <span>ข้อมูลส่วนตัว (สงวนสิทธิ์การเข้าถึง)</span>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <p>
+                        {{ student.address_house_no ? `${student.address_house_no} ถ.${student.address_road || '-'} ต.${student.address_sub_district || '-'} อ.${student.address_district || '-'} จ.${student.address_province || '-'} ${student.address_post_code || ''}` : 'ไม่มีข้อมูลที่อยู่' }}
+                      </p>
+                    </template>
+                  </div>
                 </div>
               </section>
 
@@ -208,41 +225,80 @@ onMounted(() => {
                       <h4 class="text-[11px] font-black text-rose-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                         <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span> ติดต่อฉุกเฉิน
                       </h4>
-                      <p class="text-rose-950 font-bold text-base md:text-lg">{{ student.phone_number_parent_relation || 'ผู้ปกครอง' }}</p>
+                      <template v-if="student.phone_number_parent_relation === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                        <p class="text-rose-400 font-bold text-sm flex items-center gap-1"><i class="bi bi-lock-fill"></i> ปกปิดข้อมูล</p>
+                      </template>
+                      <template v-else>
+                        <p class="text-rose-950 font-bold text-base md:text-lg">{{ student.phone_number_parent_relation || 'ผู้ปกครอง' }}</p>
+                      </template>
                     </div>
                     <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-rose-500 border border-rose-100">
                       <i class="bi bi-shield-fill-exclamation text-xl"></i>
                     </div>
                   </div>
                   <div class="mt-5 pt-5 border-t border-rose-200/50 relative z-10">
-                    <a :href="'tel:' + student.phone_number_parent" class="text-2xl md:text-3xl font-black text-rose-600 tracking-tight hover:text-rose-700 transition-colors">
-                      {{ student.phone_number_parent || '-' }}
-                    </a>
+                    <template v-if="student.phone_number_parent === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                      <div class="text-xl md:text-2xl font-black text-rose-300 tracking-tight flex items-center gap-2">
+                        <i class="bi bi-lock-fill"></i> ไม่มีสิทธิ์เข้าถึง
+                      </div>
+                    </template>
+                    <template v-else>
+                      <a :href="'tel:' + student.phone_number_parent" class="text-2xl md:text-3xl font-black text-rose-600 tracking-tight hover:text-rose-700 transition-colors">
+                        {{ student.phone_number_parent || '-' }}
+                      </a>
+                    </template>
                   </div>
                 </div>
               </section>
 
               <!-- Basic Info Grid -->
-              <section>
+<section>
                 <h3 class="text-[11px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                   <i class="bi bi-grid-fill text-blue-500 text-sm"></i> ข้อมูลส่วนตัวพื้นฐาน
                 </h3>
                 <div class="grid grid-cols-2 gap-3 md:gap-4">
                   <div class="bg-slate-50 rounded-2xl p-4 md:p-5 border border-slate-100">
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">กรุ๊ปเลือด</p>
-                    <p class="text-xl md:text-2xl font-black text-rose-600">{{ student.blood_group || '-' }}</p>
+                    <template v-if="student.blood_group === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                      <i class="bi bi-lock-fill text-slate-300 text-xl md:text-2xl mt-1 block"></i>
+                    </template>
+                    <template v-else>
+                      <p class="text-xl md:text-2xl font-black text-rose-600">{{ student.blood_group || '-' }}</p>
+                    </template>
                   </div>
+                  
                   <div class="bg-slate-50 rounded-2xl p-4 md:p-5 border border-slate-100">
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">ไซส์เสื้อ</p>
-                    <p class="text-xl md:text-2xl font-black text-blue-600">{{ student.shirt_size || '-' }}</p>
+                    <template v-if="student.shirt_size === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                      <i class="bi bi-lock-fill text-slate-300 text-xl md:text-2xl mt-1 block"></i>
+                    </template>
+                    <template v-else>
+                      <p class="text-xl md:text-2xl font-black text-blue-600">{{ student.shirt_size || '-' }}</p>
+                    </template>
                   </div>
+                  
                   <div class="bg-slate-50 rounded-2xl p-4 md:p-5 border border-slate-100 col-span-2">
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">แพ้อาหาร / โรคประจำตัว</p>
-                    <p class="font-bold text-slate-700 text-sm md:text-base">{{ student.food_allergy || 'ไม่มีประวัติการแพ้' }}</p>
+                    <template v-if="student.food_allergy === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 mt-0.5 rounded-md bg-slate-200/50 text-slate-400 text-xs font-bold">
+                        <i class="bi bi-lock-fill"></i> ปกปิดข้อมูล
+                      </div>
+                    </template>
+                    <template v-else>
+                      <p class="font-bold text-slate-700 text-sm md:text-base">{{ student.food_allergy || 'ไม่มีประวัติการแพ้' }}</p>
+                    </template>
                   </div>
+                  
                   <div class="bg-slate-50 rounded-2xl p-4 md:p-5 border border-slate-100 col-span-2">
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1.5">คณะที่ใฝ่ฝัน</p>
-                    <p class="font-bold text-slate-700 text-sm md:text-base">{{ student.target_faculty || 'ยังไม่ได้ระบุ' }}</p>
+                    <template v-if="student.target_faculty === '🔒 ไม่มีสิทธิ์เข้าถึง'">
+                      <div class="inline-flex items-center gap-1.5 px-2.5 py-1 mt-0.5 rounded-md bg-slate-200/50 text-slate-400 text-xs font-bold">
+                        <i class="bi bi-lock-fill"></i> ปกปิดข้อมูล
+                      </div>
+                    </template>
+                    <template v-else>
+                      <p class="font-bold text-slate-700 text-sm md:text-base">{{ student.target_faculty || 'ยังไม่ได้ระบุ' }}</p>
+                    </template>
                   </div>
                 </div>
               </section>
