@@ -74,7 +74,6 @@ const logout = () => {
 
 const goToMyProfile = () => {
   closeDropdowns();
-  // เผื่ออนาคตให้ Push ไปหน้าโปรไฟล์ตัวเอง
   Swal.fire('ฟีเจอร์กำลังพัฒนา', 'ระบบจะพาไปหน้าโปรไฟล์ของคุณในเร็วๆ นี้', 'info');
 };
 </script>
@@ -84,17 +83,17 @@ const goToMyProfile = () => {
     
     <div 
       v-if="activeDropdown" 
-      class="fixed inset-0 z-40" 
+      class="fixed inset-0 z-20" 
       @click="closeDropdowns"
     ></div>
 
-    <aside class="hidden md:flex md:flex-shrink-0">
-      <div class="flex flex-col w-64 bg-white border-r border-gray-100 shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20">
+    <aside class="hidden md:flex md:flex-shrink-0 relative z-50">
+      <div class="flex flex-col w-64 bg-white border-r border-gray-100 shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] h-full">
         <RouterLink 
           to="/dashboard" 
           active-class="_no_effects_"
           exact-active-class="_no_effects_"
-          class="flex items-center h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 cursor-pointer"
+          class="flex items-center h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 cursor-pointer shrink-0"
         >
           <i class="bi bi-box-fill text-white text-xl me-3 opacity-90"></i>
           <span class="text-white text-lg font-black tracking-widest">SYNC<span class="font-light opacity-80">ROOM</span></span>
@@ -140,23 +139,22 @@ const goToMyProfile = () => {
                 <div class="px-4 py-2 mb-1 border-b border-gray-50">
                   <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">จัดการบัญชี</p>
                 </div>
-                <button @click="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                <button @click.stop="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-person-badge text-lg"></i> โปรไฟล์ของฉัน
                 </button>
-                <button @click="showAccountInfo" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                <button @click.stop="showAccountInfo" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-info-circle text-lg"></i> ข้อมูลระบบ
                 </button>
-                <button @click="handleChangeRoom" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                <button @click.stop="handleChangeRoom" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-arrow-left-right text-lg"></i> สลับห้องเรียน
                 </button>
                 <div class="h-px bg-gray-100 my-1"></div>
-                <button @click="logout" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-3">
+                <button @click.stop="logout" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-box-arrow-right text-lg"></i> ออกจากระบบ
                 </button>
               </div>
             </transition>
           </div>
-
         </div>
       </div>
     </aside>
@@ -211,7 +209,7 @@ const goToMyProfile = () => {
     </div>
 
     <div class="flex flex-col flex-1 overflow-hidden relative">
-      <header class="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-100 z-10 sticky top-0 supports-[backdrop-filter]:bg-white/60">
+      <header class="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-100 z-30 sticky top-0 supports-[backdrop-filter]:bg-white/60 relative">
         <div class="h-16 flex items-center justify-between px-4 md:px-6">
           <div class="flex items-center">
             <button 
@@ -235,7 +233,7 @@ const goToMyProfile = () => {
                 <div class="relative flex items-center">
                   <button 
                     @click.stop="toggleDropdown('breadcrumbMenu')" 
-                    class="flex items-center justify-center w-6 h-6 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+                    class="flex items-center justify-center w-6 h-6 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer relative z-40"
                   >
                     <i class="bi bi-chevron-right text-[10px] font-black"></i>
                   </button>
@@ -286,7 +284,7 @@ const goToMyProfile = () => {
           <div class="relative">
             <button 
               @click.stop="toggleDropdown('headerSettings')"
-              class="flex items-center p-1.5 sm:pe-4 bg-white hover:bg-gray-50 border border-gray-100 rounded-full transition-all duration-300 shadow-sm hover:shadow group cursor-pointer focus:outline-none"
+              class="flex items-center p-1.5 sm:pe-4 bg-white hover:bg-gray-50 border border-gray-100 rounded-full transition-all duration-300 shadow-sm hover:shadow group cursor-pointer focus:outline-none relative z-40"
               :class="{'ring-2 ring-blue-500/20': activeDropdown === 'headerSettings'}"
             >
               <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-inner group-hover:scale-105 transition-transform duration-300">
@@ -307,14 +305,14 @@ const goToMyProfile = () => {
                   <p class="text-sm font-bold text-gray-800 truncate">{{ authStore.currentUserName }}</p>
                   <p class="text-xs text-blue-500 font-bold uppercase truncate">{{ authStore.currentRole }}</p>
                 </div>
-                <button @click="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                <button @click.stop="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-person-badge text-lg"></i> โปรไฟล์ของฉัน
                 </button>
-                <button @click="handleChangeRoom" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                <button @click.stop="handleChangeRoom" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-arrow-left-right text-lg"></i> สลับห้องเรียน
                 </button>
                 <div class="h-px bg-gray-100 my-1"></div>
-                <button @click="logout" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-3">
+                <button @click.stop="logout" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-power text-lg"></i> ออกจากระบบ
                 </button>
               </div>
