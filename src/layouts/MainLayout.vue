@@ -1,3 +1,4 @@
+<script setup lang="ts">
 import { ref, computed } from 'vue'; // อย่าลืม import computed
 import { RouterView, useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
