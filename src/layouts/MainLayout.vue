@@ -1,5 +1,4 @@
-<script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue'; // อย่าลืม import computed
 import { RouterView, useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import Swal from 'sweetalert2';
@@ -17,6 +16,25 @@ const menuItems = [
   { name: 'ตารางเรียน', path: '/schedules', icon: 'bi-calendar-event-fill' },
   { name: 'การเงิน', path: '/finance', icon: 'bi-wallet2' },
 ];
+
+// 🪄 เพิ่มฟังก์ชันเปลี่ยนห้อง (เหมือนใน Dashboard)
+const handleChangeRoom = () => {
+  authStore.clearRoom(); 
+  router.push('/select-room'); // หรือ path ที่คุณใช้เลือกห้อง
+};
+
+// 🪄 สร้าง Computed เพื่อหาชื่อเมนูย่อยปัจจุบัน
+const currentSubMenuName = computed(() => {
+  // ถ้าอยู่หน้า dashboard ไม่ต้องแสดงอะไรต่อท้าย
+  if (route.path === '/dashboard' || route.path === '/') return null;
+  
+  // หาเมนูที่ตรงกับ path ปัจจุบันมากที่สุด (ใช้ startsWith เผื่อมีซับรูทย่อยๆ)
+  const matchedMenu = menuItems.find(item => 
+    item.path !== '/dashboard' && route.path.startsWith(item.path)
+  );
+  
+  return matchedMenu ? matchedMenu.name : null;
+});
 
 const showAccountInfo = () => {
   Swal.fire({
@@ -144,9 +162,36 @@ const logout = () => {
               <i class="bi bi-list text-2xl"></i>
             </button>
             <div class="flex items-center">
-              <h2 class="text-lg font-black text-gray-800 tracking-tight">
-                <span v-if="authStore.currentRoomId" class="hidden sm:inline text-gray-400 font-medium me-1">ROOM /</span>
-                {{ authStore.currentRoomName || (authStore.currentRoomId ? authStore.currentRoomId : 'Dashboard') }}
+              <h2 class="text-lg font-black text-gray-800 tracking-tight flex items-center flex-wrap gap-1.5">
+                
+                <template v-if="authStore.currentRoomId">
+                  
+                  <button 
+                    @click="handleChangeRoom" 
+                    class="hidden sm:flex items-center text-gray-400 hover:text-blue-600 transition-colors cursor-pointer group"
+                  >
+                    <span class="group-hover:-translate-x-1 transition-transform inline-block me-1">‹</span> ROOM
+                  </button>
+                  <span class="hidden sm:inline text-gray-300">/</span>
+                  
+                  <router-link 
+                    to="/dashboard" 
+                    class="hover:text-blue-600 transition-colors cursor-pointer"
+                    title="กลับหน้าหลักห้องเรียน"
+                  >
+                    {{ authStore.currentRoomName || authStore.currentRoomId }}
+                  </router-link>
+                  
+                </template>
+
+                <template v-else>
+                  <span>Dashboard</span>
+                </template>
+
+                <template v-if="currentSubMenuName && authStore.currentRoomId">
+                  <span class="text-gray-300">/</span>
+                  <span class="text-blue-600 font-bold opacity-90">{{ currentSubMenuName }}</span>
+                </template>
               </h2>
             </div>
           </div>
