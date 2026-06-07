@@ -1,5 +1,20 @@
 // auth.ts
 import api from './api';
+import type { Router } from 'vue-router';
+
+// 1. ✨ สร้าง Interface กำหนดสิทธิ์ให้ Store (แก้ปัญหาใช้ any)
+interface MinimalAuthStore {
+  setToken: (token: string) => void;
+  setUserId: (id: string) => void;
+}
+
+// 2. ✨ สร้าง Interface สำหรับข้อมูลใน JWT Payload
+interface JwtPayload {
+  user_id?: string | number;
+  discord_id?: string | number;
+  sub?: string | number;
+  [key: string]: any; // สำหรับค่าอื่นๆ ที่ติดมาใน Token
+}
 
 // Discord Configs
 const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
@@ -27,22 +42,57 @@ export const loginWithGoogle = async (code: string): Promise<{ access_token: str
   return await api.post('/api/auth/google/login', { code });
 };
 
-// ✨ เพิ่มฟังก์ชันกลางสำหรับจัดการ Token ที่ได้กลับมา
-export const processAuthSuccess = (token: string, authStore: any, router: any) => {
-  authStore.setToken(token);
-  
-  const payloadBase64 = token.split('.')[1];
-  const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(
-    atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-  );
-  const decoded = JSON.parse(jsonPayload);
-
-  const userId = String(decoded.user_id || decoded.discord_id || decoded.sub);
-  if (!userId || userId === 'undefined') {
-    throw new Error('โครงสร้าง Token ไม่ถูกต้อง ไม่พบ User ID');
+/**
+ * 3. ✨ แยกฟังก์ชันย่อยสำหรับแกะ JWT Token ออกมาต่างหาก (Separation of Concerns)
+ * ช่วยให้โค้ดหลักอ่านง่ายขึ้น และดักจับ Error ได้เป็นสัดส่วน
+ */
+const decodeJwtPayload = (token: string): JwtPayload => {
+  const parts = token.split('.');
+  if (parts.length < 2) {
+    throw new Error('โครงสร้าง JWT Token ไม่ถูกต้อง (รูปแบบไม่ครบ 3 ส่วน)');
   }
 
-  authStore.setUserId(userId);
-  router.push('/select-room');
+  const payloadBase64 = parts[1];
+  if (!payloadBase64) {
+    throw new Error('โครงสร้าง JWT Token ไม่ถูกต้อง (ไม่พบก้อน Payload)');
+  }
+
+  const base64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+  );
+
+  return JSON.parse(jsonPayload) as JwtPayload;
+};
+
+/**
+ * 4. 🚀 ฟังก์ชันหลักสำหรับจัดการสิทธิ์เข้าสู่ระบบเมื่อสำเร็จ
+ * ถอด `any` ออกแล้วใช้ Type ที่ถูกต้องทั้งหมด
+ */
+export const processAuthSuccess = (token: string, authStore: MinimalAuthStore, router: Router): void => {
+  // บันทึก Token ทันที
+  authStore.setToken(token);
+  
+  try {
+    // เรียกใช้ฟังก์ชันแกะ Token ด้านบน
+    const decoded = decodeJwtPayload(token);
+    
+    // ดึง User ID จาก Provider ต่างๆ
+    const userId = String(decoded.user_id || decoded.discord_id || decoded.sub);
+    
+    if (!userId || userId === 'undefined') {
+      throw new Error('ไม่พบข้อมูล User ID ภายใน Token');
+    }
+
+    // บันทึกข้อมูลและพาวาร์ปไปหน้าเลือกห้อง
+    authStore.setUserId(userId);
+    router.push('/select-room');
+    
+  } catch (err: any) {
+    console.error('JWT Processing error:', err);
+    throw new Error(`การประมวลผลสิทธิ์ล้มเหลว: ${err.message}`);
+  }
 };
