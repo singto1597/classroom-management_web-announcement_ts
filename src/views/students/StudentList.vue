@@ -8,7 +8,7 @@ import Swal from 'sweetalert2'
 const authStore = useAuthStore()
 
 // --- ถอด Mock Data แล้วใช้จาก Store ---
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -52,7 +52,7 @@ const filteredStudents = computed(() => {
 const fetchStudents = async () => {
   isLoading.value = true
   try {
-    const data = await StudentService.getStudents(currentServerId)
+    const data = await StudentService.getStudents(currentRoomId)
     console.log("ข้อมูลที่ได้รับจาก API:", data)
     students.value = Array.isArray(data) ? data : []
   } catch (error: any) {
@@ -87,7 +87,7 @@ const confirmDelete = async (student: Student) => {
 
   if (result.isConfirmed) {
     try {
-      await StudentService.deleteStudent(currentServerId, student.student_no, currentUserName)
+      await StudentService.deleteStudent(currentRoomId, student.student_no, currentUserName)
       await Swal.fire('ลบสำเร็จ!', 'ข้อมูลนักเรียนถูกลบออกแล้ว', 'success')
       fetchStudents()
     } catch (error: any) {

@@ -9,7 +9,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 // --- นำ Mock Data ออก แล้วดึงจาก Store ---
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -40,7 +40,7 @@ const submitSingle = async () => {
 
   isSubmitting.value = true
   try {
-    await StudentService.addStudent(currentServerId, {
+    await StudentService.addStudent(currentRoomId, {
       student_no: parseInt(singleForm.value.student_no),
       first_name: singleForm.value.first_name,
       last_name: singleForm.value.last_name,
@@ -86,7 +86,7 @@ const submitBulk = async () => {
       throw new Error('รูปแบบข้อมูลไม่ถูกต้อง (ต้องเป็น: เลขที่,ชื่อ,นามสกุล)')
     }
 
-    await StudentService.bulkAddStudents(currentServerId, students, currentUserName)
+    await StudentService.bulkAddStudents(currentRoomId, students, currentUserName)
     await Swal.fire('สำเร็จ!', `เพิ่มนักเรียนรวดเดียว ${students.length} คน เรียบร้อยแล้ว`, 'success')
     router.push('/students')
   } catch (error: any) {

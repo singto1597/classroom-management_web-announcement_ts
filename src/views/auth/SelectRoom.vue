@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { ClassroomService } from '@/services/classroom';
-import type { UserRoom } from '@/types/classroom';
+import type { UserRoom } from '@/types/classroom'; // ⚠️ อย่าลืมไปเพิ่ม room_id: number ใน Interface นี้นะครับ
 import Swal from 'sweetalert2';
 import { StudentService } from '@/services/student';
 
@@ -32,24 +32,27 @@ onMounted(async () => {
 });
 
 const selectRoom = async (room: UserRoom) => {
-  const safeServerId = room.server_id_str || String(room.server_id);
+  // 🔥 ใช้ room_id (number) แทน server_id
+  const targetRoomId = room.room_id; 
   
+  if (!targetRoomId) {
+    Swal.fire('ข้อผิดพลาด', 'ไม่พบ Room ID สำหรับห้องนี้', 'error');
+    return;
+  }
+
   Swal.fire({ title: 'กำลังเข้าสู่ห้องเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
   try {
-    // 1. ดึงโปรไฟล์
-    const myProfile: any = await StudentService.getMyProfile(safeServerId);
+    // ดึงโปรไฟล์ด้วย roomId
+    const myProfile: any = await StudentService.getMyProfile(targetRoomId);
     const fullName = `${myProfile.first_name} ${myProfile.last_name}`;
     
-    // 🔥 แก้ตรงนี้: ส่งให้ครบ 4 ตัว (ID, ชื่อห้อง, Role, ชื่อผู้ใช้)
-    authStore.setRoom(safeServerId, room.room_name, room.role, fullName);
+    // บันทึกลง Store (ส่งเป็น Number)
+    authStore.setRoom(targetRoomId, room.room_name, room.role, fullName);
 
   } catch (error) {
-    // ถ้าดึงไม่ได้ (เช่น เป็น Super Admin) ให้ใช้ชื่อตาม Role ไปก่อน
     const fallbackName = room.role === 'admin' ? 'Administrator' : 'User';
-    
-    // 🔥 แก้ตรงนี้ด้วย: ส่งให้ครบ 4 ตัวเช่นกัน
-    authStore.setRoom(safeServerId, room.room_name, room.role, fallbackName);
+    authStore.setRoom(targetRoomId, room.room_name, room.role, fallbackName);
   }
 
   Swal.close();

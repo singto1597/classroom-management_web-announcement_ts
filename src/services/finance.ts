@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api'; // (อย่าลืมเช็ค path import api ให้ตรงกับของจริง)
 import type { 
   Account, 
   AccountCreate, 
@@ -23,63 +23,68 @@ export const FinanceService = {
   // 💰 1. Accounts & Categories
   // ==========================================
   
-  async getAccounts(serverId: string): Promise<Account[]> {
-    return await api.get(`/api/classroom/${serverId}/finance/accounts`) as unknown as Account[];
+  async getAccounts(roomId: number): Promise<Account[]> {
+    return await api.get(`/api/classroom/${roomId}/finance/accounts?target_type=room`) as unknown as Account[];
   },
 
-  async createAccount(serverId: string, payload: AccountCreate): Promise<any> {
-    return await api.post(`/api/classroom/${serverId}/finance/accounts`, payload);
+  async createAccount(roomId: number, payload: AccountCreate): Promise<any> {
+    return await api.post(`/api/classroom/${roomId}/finance/accounts?target_type=room`, payload);
   },
 
-  async updateAccount(serverId: string, accountId: number, name: string, userName: string): Promise<any> {
-    return await api.patch(`/api/classroom/${serverId}/finance/accounts/${accountId}`, { 
+  async updateAccount(roomId: number, accountId: number, name: string, userName: string): Promise<any> {
+    return await api.patch(`/api/classroom/${roomId}/finance/accounts/${accountId}?target_type=room`, { 
       account_name: name,
       user_name: userName
     });
   },
 
-  async deleteAccount(serverId: string, accountId: number): Promise<any> {
-    return await api.delete(`/api/classroom/${serverId}/finance/accounts/${accountId}`);
+  async deleteAccount(roomId: number, accountId: number): Promise<any> {
+    return await api.delete(`/api/classroom/${roomId}/finance/accounts/${accountId}?target_type=room`);
   },
 
-  async getCategories(serverId: string, type?: 'income' | 'expense'): Promise<Category[]> {
-    const params = type ? { cat_type: type } : {};
-    return await api.get(`/api/classroom/${serverId}/finance/categories`, { params }) as unknown as Category[];
+  async getCategories(roomId: number, type?: 'income' | 'expense'): Promise<Category[]> {
+    // ✨ เพิ่ม target_type เข้าไปใน params object
+    const params: any = { target_type: 'room' };
+    if (type) params.cat_type = type;
+    
+    return await api.get(`/api/classroom/${roomId}/finance/categories`, { params }) as unknown as Category[];
   },
 
-  async createCategory(serverId: string, payload: CategoryCreate): Promise<any> {
-    return await api.post(`/api/classroom/${serverId}/finance/categories`, payload);
+  async createCategory(roomId: number, payload: CategoryCreate): Promise<any> {
+    return await api.post(`/api/classroom/${roomId}/finance/categories?target_type=room`, payload);
   },
 
-  async updateCategory(serverId: string, categoryId: number, name: string, userName: string): Promise<any> {
-    return await api.patch(`/api/classroom/${serverId}/finance/categories/${categoryId}`, { 
+  async updateCategory(roomId: number, categoryId: number, name: string, userName: string): Promise<any> {
+    return await api.patch(`/api/classroom/${roomId}/finance/categories/${categoryId}?target_type=room`, { 
       category_name: name,
       user_name: userName
     });
   },
 
-  async deleteCategory(serverId: string, categoryId: number): Promise<any> {
-    return await api.delete(`/api/classroom/${serverId}/finance/categories/${categoryId}`);
+  async deleteCategory(roomId: number, categoryId: number): Promise<any> {
+    return await api.delete(`/api/classroom/${roomId}/finance/categories/${categoryId}?target_type=room`);
   },
 
   // ==========================================
   // 💸 2. Transactions & Transfers
   // ==========================================
 
-  async getTransactions(serverId: string, filters: any = {}): Promise<TransactionList> {
-    return await api.get(`/api/classroom/${serverId}/finance/transactions`, { params: filters }) as unknown as TransactionList;
+  async getTransactions(roomId: number, filters: any = {}): Promise<TransactionList> {
+    // ✨ ผสม target_type เข้ากับ filters เดิม
+    const params = { ...filters, target_type: 'room' };
+    return await api.get(`/api/classroom/${roomId}/finance/transactions`, { params }) as unknown as TransactionList;
   },
 
-  async addTransaction(serverId: string, payload: TransactionCreate): Promise<any> {
-    return await api.post(`/api/classroom/${serverId}/finance/transactions`, payload);
+  async addTransaction(roomId: number, payload: TransactionCreate): Promise<any> {
+    return await api.post(`/api/classroom/${roomId}/finance/transactions?target_type=room`, payload);
   },
 
-  async transferMoney(serverId: string, payload: TransferCreate): Promise<any> {
-    return await api.post(`/api/classroom/${serverId}/finance/transfer`, payload);
+  async transferMoney(roomId: number, payload: TransferCreate): Promise<any> {
+    return await api.post(`/api/classroom/${roomId}/finance/transfer?target_type=room`, payload);
   },
 
-  async revertTransaction(serverId: string, transactionId: number, userName: string): Promise<any> {
-    return await api.delete(`/api/classroom/${serverId}/finance/transactions/${transactionId}`, {
+  async revertTransaction(roomId: number, transactionId: number, userName: string): Promise<any> {
+    return await api.delete(`/api/classroom/${roomId}/finance/transactions/${transactionId}?target_type=room`, {
       data: { user_name: userName }
     });
   },
@@ -88,42 +93,43 @@ export const FinanceService = {
   // 📦 3. Fee Collections & Payments
   // ==========================================
 
-  async getCollections(serverId: string): Promise<Collection[]> {
-    return await api.get(`/api/classroom/${serverId}/finance/collections`) as unknown as Collection[];
+  async getCollections(roomId: number): Promise<Collection[]> {
+    return await api.get(`/api/classroom/${roomId}/finance/collections?target_type=room`) as unknown as Collection[];
   },
 
-  async createCollection(serverId: string, payload: FeeCollectionCreate): Promise<any> {
-    return await api.post(`/api/classroom/${serverId}/finance/collections`, payload);
+  async createCollection(roomId: number, payload: FeeCollectionCreate): Promise<any> {
+    return await api.post(`/api/classroom/${roomId}/finance/collections?target_type=room`, payload);
   },
 
-  async getCollectionStatus(serverId: string, collectionId: number): Promise<CollectionStatus> {
-    return await api.get(`/api/classroom/${serverId}/finance/collections/${collectionId}`) as unknown as CollectionStatus;
+  async getCollectionStatus(roomId: number, collectionId: number): Promise<CollectionStatus> {
+    return await api.get(`/api/classroom/${roomId}/finance/collections/${collectionId}?target_type=room`) as unknown as CollectionStatus;
   },
 
-  async updateCollection(serverId: string, collectionId: number, payload: FeeCollectionUpdate): Promise<any> {
-    return await api.put(`/api/classroom/${serverId}/finance/collections/${collectionId}`, payload);
+  async updateCollection(roomId: number, collectionId: number, payload: FeeCollectionUpdate): Promise<any> {
+    return await api.put(`/api/classroom/${roomId}/finance/collections/${collectionId}?target_type=room`, payload);
   },
 
-  async confirmPayment(serverId: string, paymentId: number, payload: PaymentConfirm): Promise<any> {
-    return await api.put(`/api/classroom/${serverId}/finance/payments/${paymentId}/pay`, payload);
+  async confirmPayment(roomId: number, paymentId: number, payload: PaymentConfirm): Promise<any> {
+    return await api.put(`/api/classroom/${roomId}/finance/payments/${paymentId}/pay?target_type=room`, payload);
   },
 
   // ==========================================
   // 📊 4. Summary & Reports
   // ==========================================
 
-  async getSummary(serverId: string, month?: number, year?: number): Promise<FinanceSummary> {
-    const params: any = {};
+  async getSummary(roomId: number, month?: number, year?: number): Promise<FinanceSummary> {
+    // ✨ เพิ่ม target_type เข้าไปใน params object
+    const params: any = { target_type: 'room' };
     if (month) params.month = month;
     if (year) params.year = year;
-    return await api.get(`/api/classroom/${serverId}/finance/summary`, { params }) as unknown as FinanceSummary;
+    return await api.get(`/api/classroom/${roomId}/finance/summary`, { params }) as unknown as FinanceSummary;
   },
 
-  async getAllDebtors(serverId: string): Promise<Debtor[]> {
-    return await api.get(`/api/classroom/${serverId}/finance/debtors`) as unknown as Debtor[];
+  async getAllDebtors(roomId: number): Promise<Debtor[]> {
+    return await api.get(`/api/classroom/${roomId}/finance/debtors?target_type=room`) as unknown as Debtor[];
   },
 
-  async getStudentDebts(serverId: string, studentId: number): Promise<StudentDebtProfile> {
-    return await api.get(`/api/classroom/${serverId}/finance/students/${studentId}/debts`) as unknown as StudentDebtProfile;
+  async getStudentDebts(roomId: number, studentId: number): Promise<StudentDebtProfile> {
+    return await api.get(`/api/classroom/${roomId}/finance/students/${studentId}/debts?target_type=room`) as unknown as StudentDebtProfile;
   }
 };
