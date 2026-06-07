@@ -13,8 +13,8 @@ const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
  */
 export const getDiscordAuthUrl = (): string => {
   const scope = encodeURIComponent('identify email');
-  // แนะนำให้ใช้ Redirect URI เดิม หรือแนบ ?provider=discord ไว้ใน Discord Developer Portal ด้วย
-  return `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=${scope}`;
+  // แนะนำให้ใช้ Redirect URI เดิม หรือเพิ่ม &state=discord เข้าไปเพื่อให้ชัดเจนขึ้นก็ได้
+  return `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(DISCORD_REDIRECT_URI)}&response_type=code&scope=${scope}&state=discord`;
 };
 
 /**
@@ -22,9 +22,12 @@ export const getDiscordAuthUrl = (): string => {
  */
 export const getGoogleAuthUrl = (): string => {
   const scope = encodeURIComponent('openid email profile');
-  // แนบ state หรือ provider เพื่อให้ Callback รู้ว่ามาจากไหน (อย่าลืมเพิ่ม Callback URL นี้ใน Google Cloud Console)
-  const redirectUri = `${GOOGLE_REDIRECT_URI}?provider=google`; 
-  return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}`;
+  
+  // 🚨 แก้ไขแล้ว: ใช้ Redirect URI เพียวๆ ห้ามมี ? อะไรต่อท้ายเด็ดขาด!
+  const redirectUri = GOOGLE_REDIRECT_URI; 
+  
+  // 🚨 แก้ไขแล้ว: เอาคำว่า google ไปฝากไว้ใน &state=google แทน
+  return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${scope}&state=google`;
 };
 
 /**
