@@ -53,7 +53,7 @@ const showAccountInfo = () => {
     title: 'ข้อมูลบัญชีระบบ',
     html: `
       <div class="text-left mt-4 space-y-3">
-        <p class="text-sm text-gray-600"><b>Discord ID:</b> <span class="bg-gray-100 px-2 py-1 rounded font-mono">${authStore.discordId}</span></p>
+        <p class="text-sm text-gray-600"><b>Discord ID:</b> <span class="bg-gray-100 px-2 py-1 rounded font-mono">${authStore.userId}</span></p>
         <p class="text-sm text-gray-600"><b>Room Role:</b> <span class="uppercase font-bold text-blue-600">${authStore.currentRole}</span></p>
       </div>
     `,

@@ -13,13 +13,13 @@ const rooms = ref<UserRoom[]>([]);
 const isLoading = ref(true);
 
 onMounted(async () => {
-  if (!authStore.discordId) {
+  if (!authStore.userId) {
     isLoading.value = false;
     return;
   }
 
   try {
-    rooms.value = await ClassroomService.getUserRooms(authStore.discordId);
+    rooms.value = await ClassroomService.getUserRooms(authStore.userId);
   } catch (error: any) {
     Swal.fire({
       icon: 'error',
