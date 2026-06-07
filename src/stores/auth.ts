@@ -4,9 +4,9 @@ import router from '@/router';
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
-  const discordId = ref<string | null>(localStorage.getItem('discord_id_str'));
+  // ✨ เปลี่ยนจาก discord_id_str เป็น user_id_str เพื่อความกว้างขวาง
+  const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
-  // ✨ แปลงค่าจาก localStorage ให้เป็น Number
   const storedRoomId = localStorage.getItem('current_room_id');
   const currentRoomId = ref<number | null>(storedRoomId ? Number(storedRoomId) : null);
   
@@ -22,18 +22,18 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('access_token', newToken);
   };
 
-  const setDiscordId = (id: string | number | null | undefined) => {
+  // ✨ เปลี่ยนชื่อเป็น setUserId
+  const setUserId = (id: string | number | null | undefined) => {
     if (id === null || id === undefined) {
-      discordId.value = null;
-      localStorage.removeItem('discord_id_str');
+      userId.value = null;
+      localStorage.removeItem('user_id_str');
     } else {
       const idStr = String(id);
-      discordId.value = idStr;
-      localStorage.setItem('discord_id_str', idStr);
+      userId.value = idStr;
+      localStorage.setItem('user_id_str', idStr);
     }
   };
 
-  // ✨ อัปเดตให้รับ roomId เป็น number
   const setRoom = (roomId: number, roomName: string, role: string, userName: string) => {
     currentRoomId.value = roomId;
     currentRoomName.value = roomName;
@@ -60,16 +60,16 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = () => {
     token.value = null;
-    discordId.value = null;
+    userId.value = null;
     clearRoom();
     localStorage.removeItem('access_token');
-    localStorage.removeItem('discord_id_str');
+    localStorage.removeItem('user_id_str');
     router.push('/login');
   };
 
   return {
     token,
-    discordId,
+    userId, // ✨ Export ค่า userId ออกไปใช้แทน discordId
     currentRoomId,
     currentRoomName,
     currentRole,
@@ -77,7 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isAdmin,
     setToken,
-    setDiscordId,
+    setUserId, // ✨ Export ฟังก์ชันใหม่
     setRoom,
     clearRoom,
     logout,

@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import api from '@/services/api';
+import { loginWithDiscord, loginWithGoogle } from '@/services/auth';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,17 +11,23 @@ const errorMsg = ref<string | null>(null);
 
 onMounted(async () => {
   const code = route.query.code as string;
+  const provider = route.query.provider as string;
   
   if (!code) {
-    errorMsg.value = 'ไม่พบรหัสยืนยันตัวตนจาก Discord';
+    errorMsg.value = 'ไม่พบรหัสยืนยันตัวตนจากผู้ให้บริการ';
     return;
   }
 
   try {
-    // 1. 🚀 ยิง API ไปหา Backend โดยส่งเป็น JSON Body
-    const response: any = await api.post('/api/auth/discord/login', { 
-      code: code 
-    });
+    let response: any;
+
+    // 1. 🚀 ยิง API ไปหา Backend ตาม Provider
+    if (provider === 'google') {
+      response = await loginWithGoogle(code);
+    } else {
+      // Default fallback ไปหา Discord
+      response = await loginWithDiscord(code);
+    }
     
     const token = response.access_token;
 
@@ -39,15 +45,15 @@ onMounted(async () => {
     );
     const decoded = JSON.parse(jsonPayload);
 
-    // 4. ดึง discord_id ออกมาจาก Token Payload ตรงๆ เลย
-    const discordId = String(decoded.discord_id || decoded.sub);
+    // 4. ดึง User ID ออกมาจาก Token Payload (รองรับทั้ง google, discord, หรือ sub ทั่วไป)
+    const userId = String(decoded.user_id || decoded.discord_id || decoded.sub);
 
-    if (!discordId) {
-      throw new Error('โครงสร้าง Token ไม่ถูกต้อง ไม่พบ Discord ID');
+    if (!userId || userId === 'undefined') {
+      throw new Error('โครงสร้าง Token ไม่ถูกต้อง ไม่พบ User ID');
     }
 
-    // 5. บันทึก Discord ID ลง Store
-    authStore.setDiscordId(discordId);
+    // 5. บันทึก User ID ลง Store
+    authStore.setUserId(userId);
 
     // 6. 🎉 ยืนยันตัวตนสำเร็จ! พาไปหน้า "เลือกห้องเรียน"
     router.push('/select-room');
@@ -70,11 +76,11 @@ const goBackToLogin = () => {
       <div v-if="!errorMsg">
         <div class="relative w-20 h-20 mx-auto mb-6">
           <div class="absolute inset-0 rounded-full border-4 border-slate-100"></div>
-          <div class="absolute inset-0 rounded-full border-4 border-[#5865F2] border-t-transparent animate-spin"></div>
-          <i class="bi bi-discord absolute inset-0 flex items-center justify-center text-2xl text-[#5865F2]"></i>
+          <div class="absolute inset-0 rounded-full border-4 border-slate-800 border-t-transparent animate-spin"></div>
+          <i class="bi bi-shield-lock absolute inset-0 flex items-center justify-center text-2xl text-slate-800"></i>
         </div>
         <h2 class="text-2xl font-bold text-slate-800 mb-2">กำลังยืนยันตัวตน...</h2>
-        <p class="text-slate-500 font-medium">กรุณารอสักครู่ ระบบกำลังเชื่อมต่อกับ Discord</p>
+        <p class="text-slate-500 font-medium">กรุณารอสักครู่ ระบบกำลังเข้าสู่ระบบอย่างปลอดภัย</p>
       </div>
 
       <div v-else class="animate-in fade-in zoom-in duration-300">
