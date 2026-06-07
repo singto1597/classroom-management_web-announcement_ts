@@ -11,10 +11,19 @@ const router = createRouter({
       component: () => import('@/views/auth/Login.vue'),
       meta: { requiresAuth: false }
     },
+    // ใส่ 2 ก้อนนี้เข้าไปแทนที่ครับ
     {
-      path: '/auth/callback',
-      name: 'auth-callback',
-      component: () => import('@/views/auth/AuthCallback.vue'),
+      path: '/auth/google/callback',
+      name: 'google-callback',
+      // ชี้ไปที่ไฟล์ใหม่ที่เราสร้างไว้สำหรับ Google โดยเฉพาะ
+      component: () => import('@/views/auth/GoogleCallback.vue'), 
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/auth/discord/callback',
+      name: 'discord-callback',
+      // ชี้ไปที่ไฟล์ใหม่ที่เราสร้างไว้สำหรับ Discord โดยเฉพาะ
+      component: () => import('@/views/auth/DiscordCallback.vue'), 
       meta: { requiresAuth: false }
     },
     {
