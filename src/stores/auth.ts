@@ -19,7 +19,15 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value);
   const isAdmin = computed(() => currentRole.value !== 'student' && currentRole.value !== null);
 
-  // 🌟 ฟังก์ชันไปดึงข้อมูล Profile จาก Backend (ใช้ fetch แทน axios)
+  // ✨ สร้าง currentUserName คืนมาเพื่อไม่ให้ไฟล์ Component เก่าๆ (เช่น Finance, Tasks) Error
+  const currentUserName = computed(() => {
+    const first = firstName.value || '';
+    const last = lastName.value || '';
+    const full = `${first} ${last}`.trim();
+    return full || 'ผู้ใช้งานระบบ';
+  });
+
+  // 🌟 ฟังก์ชันไปดึงข้อมูล Profile จาก Backend (ใช้ fetch)
   const fetchProfile = async () => {
     if (!token.value) return;
     try {
@@ -35,11 +43,9 @@ export const useAuthStore = defineStore('auth', () => {
 
       const data = await response.json();
       
-      // เอาชื่อที่ได้จาก DB มาเซ็ตลงตัวแปร
       firstName.value = data.first_name || 'ไม่ระบุชื่อ';
       lastName.value = data.last_name || '';
       
-      // เซฟลง LocalStorage กันเหนียวเวลากด F5
       localStorage.setItem('user_first_name', firstName.value!);
       localStorage.setItem('user_last_name', lastName.value!);
     } catch (error) {
@@ -63,7 +69,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  const setRoom = (roomId: number, roomName: string, roomCode: string | null | undefined, role: string) => {
+  // ✨ เพิ่ม userName?: string เพื่อให้ Lobby.vue โค้ดเก่าส่งค่ามาแล้วไม่พัง
+  const setRoom = (roomId: number, roomName: string, roomCode: string | null | undefined, role: string, userName?: string) => {
     currentRoomId.value = roomId;
     currentRoomName.value = roomName;
     currentRoomCode.value = roomCode || 'N/A';
@@ -101,7 +108,7 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   return {
-    token, userId, firstName, lastName,
+    token, userId, firstName, lastName, currentUserName, // ✨ Export ออกไปให้ใช้
     currentRoomId, currentRoomName, currentRoomCode, currentRole,
     isAuthenticated, isAdmin,
     setToken, setUserId, setRoom, clearRoom, logout, fetchProfile
