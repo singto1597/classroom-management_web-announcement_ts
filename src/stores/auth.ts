@@ -6,7 +6,6 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
   const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
-  // 🌟 State สำหรับเก็บชื่อจริง-นามสกุล
   const firstName = ref<string | null>(localStorage.getItem('user_first_name'));
   const lastName = ref<string | null>(localStorage.getItem('user_last_name'));
 
@@ -19,7 +18,6 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value);
   const isAdmin = computed(() => currentRole.value !== 'student' && currentRole.value !== null);
 
-  // ✨ สร้าง currentUserName คืนมาเพื่อไม่ให้ไฟล์ Component เก่าๆ (เช่น Finance, Tasks) Error
   const currentUserName = computed(() => {
     const first = firstName.value || '';
     const last = lastName.value || '';
@@ -27,7 +25,6 @@ export const useAuthStore = defineStore('auth', () => {
     return full || 'ผู้ใช้งานระบบ';
   });
 
-  // 🌟 ฟังก์ชันไปดึงข้อมูล Profile จาก Backend (ใช้ fetch)
   const fetchProfile = async () => {
     if (!token.value) return;
     try {
@@ -38,12 +35,10 @@ export const useAuthStore = defineStore('auth', () => {
           'Content-Type': 'application/json'
         }
       });
-
       if (!response.ok) throw new Error('Failed to fetch profile');
-
       const data = await response.json();
       
-      firstName.value = data.first_name || 'ไม่ระบุชื่อ';
+      firstName.value = data.first_name || '';
       lastName.value = data.last_name || '';
       
       localStorage.setItem('user_first_name', firstName.value!);
@@ -69,7 +64,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  // ✨ เพิ่ม userName?: string เพื่อให้ Lobby.vue โค้ดเก่าส่งค่ามาแล้วไม่พัง
   const setRoom = (roomId: number, roomName: string, roomCode: string | null | undefined, role: string, userName?: string) => {
     currentRoomId.value = roomId;
     currentRoomName.value = roomName;
@@ -100,15 +94,12 @@ export const useAuthStore = defineStore('auth', () => {
     firstName.value = null;
     lastName.value = null;
     clearRoom();
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_id_str');
-    localStorage.removeItem('user_first_name');
-    localStorage.removeItem('user_last_name');
+    localStorage.clear();
     router.push('/login');
   };
 
   return {
-    token, userId, firstName, lastName, currentUserName, // ✨ Export ออกไปให้ใช้
+    token, userId, firstName, lastName, currentUserName,
     currentRoomId, currentRoomName, currentRoomCode, currentRole,
     isAuthenticated, isAdmin,
     setToken, setUserId, setRoom, clearRoom, logout, fetchProfile
