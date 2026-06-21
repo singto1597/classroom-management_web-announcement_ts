@@ -73,10 +73,10 @@ const enterRoom = async (room: UserRoom) => {
   try {
     const myProfile: any = await StudentService.getMyProfile(targetRoomId);
     const fullName = `${myProfile.first_name} ${myProfile.last_name}`;
-    authStore.setRoom(targetRoomId, room.room_name, room.role, fullName);
+    authStore.setRoom(targetRoomId, room.room_name, room.room_code, room.role, fullName);
   } catch (error) {
     const fallbackName = room.role === 'admin' ? 'Administrator' : 'User';
-    authStore.setRoom(targetRoomId, room.room_name, room.role, fallbackName);
+    authStore.setRoom(targetRoomId, room.room_name, room.room_code, room.role, fallbackName);
   }
 
   Swal.close();

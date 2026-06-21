@@ -4,13 +4,14 @@ import router from '@/router';
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
-  // ✨ เปลี่ยนจาก discord_id_str เป็น user_id_str เพื่อความกว้างขวาง
   const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
   const storedRoomId = localStorage.getItem('current_room_id');
   const currentRoomId = ref<number | null>(storedRoomId ? Number(storedRoomId) : null);
   
   const currentRoomName = ref<string | null>(localStorage.getItem('current_room_name'));
+  // ✨ เพิ่ม state สำหรับเก็บ Room Code
+  const currentRoomCode = ref<string | null>(localStorage.getItem('current_room_code')); 
   const currentRole = ref<string | null>(localStorage.getItem('current_role'));
   const currentUserName = ref<string | null>(localStorage.getItem('current_user_name'));
 
@@ -22,7 +23,6 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.setItem('access_token', newToken);
   };
 
-  // ✨ เปลี่ยนชื่อเป็น setUserId
   const setUserId = (id: string | number | null | undefined) => {
     if (id === null || id === undefined) {
       userId.value = null;
@@ -34,14 +34,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  const setRoom = (roomId: number, roomName: string, role: string, userName: string) => {
+  // ✨ อัปเดตฟังก์ชัน setRoom ให้รับ roomCode เข้ามาด้วย
+  const setRoom = (roomId: number, roomName: string, roomCode: string | null | undefined, role: string, userName: string) => {
     currentRoomId.value = roomId;
     currentRoomName.value = roomName;
+    currentRoomCode.value = roomCode || 'N/A'; // บันทึก Code
     currentRole.value = role;
     currentUserName.value = userName;
 
     localStorage.setItem('current_room_id', String(roomId));
     localStorage.setItem('current_room_name', roomName);
+    localStorage.setItem('current_room_code', roomCode || 'N/A');
     localStorage.setItem('current_role', role);
     localStorage.setItem('current_user_name', userName);
   };
@@ -49,11 +52,13 @@ export const useAuthStore = defineStore('auth', () => {
   const clearRoom = () => {
     currentRoomId.value = null;
     currentRoomName.value = null;
+    currentRoomCode.value = null;
     currentRole.value = null;
     currentUserName.value = null;
 
     localStorage.removeItem('current_room_id');
     localStorage.removeItem('current_room_name');
+    localStorage.removeItem('current_room_code');
     localStorage.removeItem('current_role');
     localStorage.removeItem('current_user_name');
   };
@@ -69,15 +74,16 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     token,
-    userId, // ✨ Export ค่า userId ออกไปใช้แทน discordId
+    userId, 
     currentRoomId,
     currentRoomName,
+    currentRoomCode, // ✨ Export ออกไปให้ใช้
     currentRole,
     currentUserName,
     isAuthenticated,
     isAdmin,
     setToken,
-    setUserId, // ✨ Export ฟังก์ชันใหม่
+    setUserId, 
     setRoom,
     clearRoom,
     logout,
