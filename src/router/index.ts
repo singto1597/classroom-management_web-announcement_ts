@@ -25,7 +25,7 @@ const router = createRouter({
       component: () => import('@/views/auth/DiscordCallback.vue'), 
       meta: { requiresAuth: false }
     },
-    // ✨ แทนที่ /select-room ด้วย /lobby พร้อมใช้ GlobalLayout
+    // ✨ แทนที่ /lobby ด้วย /lobby พร้อมใช้ GlobalLayout
     {
       path: '/lobby',
       component: GlobalLayout,
@@ -153,7 +153,7 @@ router.beforeEach((to, from) => {
     return '/login';
   } 
   
-  // ✨ ล็อกอินแล้วเข้าหน้า login ให้เด้งมาที่ Lobby แทน (เปลี่ยนจาก /select-room)
+  // ✨ ล็อกอินแล้วเข้าหน้า login ให้เด้งมาที่ Lobby แทน (เปลี่ยนจาก /lobby)
   if (to.path === '/login' && isAuthenticated) {
     return '/lobby';
   }

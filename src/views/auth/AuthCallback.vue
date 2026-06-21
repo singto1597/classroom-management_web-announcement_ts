@@ -56,7 +56,7 @@ onMounted(async () => {
     authStore.setUserId(userId);
 
     // 6. 🎉 ยืนยันตัวตนสำเร็จ! พาไปหน้า "เลือกห้องเรียน"
-    router.push('/select-room');
+    router.push('/lobby');
 
   } catch (err: any) {
     console.error('Auth failed:', err);

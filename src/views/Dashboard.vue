@@ -13,10 +13,10 @@ const userName = computed(() => authStore.currentUserName || 'User');
 const role = computed(() => authStore.currentRole || 'Unknown');
 const isAdmin = computed(() => authStore.isAdmin);
 
-// หากต้องการให้ผู้ใช้สลับห้อง ให้กลับไปหน้า Select Room (สมมติว่าอยู่ที่ /select-room)
+// หากต้องการให้ผู้ใช้สลับห้อง ให้กลับไปหน้า Select Room (สมมติว่าอยู่ที่ /lobby)
 const handleChangeRoom = () => {
   authStore.clearRoom();
-  router.push('/select-room'); 
+  router.push('/lobby'); 
 };
 
 const goToMyProfile = async () => {

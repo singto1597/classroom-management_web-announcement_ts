@@ -36,7 +36,7 @@ const menuItems = [
 const handleChangeRoom = () => {
   closeDropdowns();
   authStore.clearRoom(); 
-  router.push('/select-room'); 
+  router.push('/lobby'); 
 };
 
 const currentSubMenuName = computed(() => {

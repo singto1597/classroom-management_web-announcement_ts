@@ -89,7 +89,7 @@ export const processAuthSuccess = (token: string, authStore: MinimalAuthStore, r
 
     // บันทึกข้อมูลและพาวาร์ปไปหน้าเลือกห้อง
     authStore.setUserId(userId);
-    router.push('/select-room');
+    router.push('/lobby');
     
   } catch (err: any) {
     console.error('JWT Processing error:', err);
