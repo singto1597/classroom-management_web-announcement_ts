@@ -77,13 +77,13 @@ export const StudentService = {
   },
 
   async getPendingRequests(roomId: number): Promise<any[]> {
-    return await api.get(`/api/classroom/${roomId}/requests`);
+    return await api.get(`/api/classrooms/${roomId}/requests`);
   },
   async approveStudent(roomId: number, studentNo: number): Promise<any> {
-    return await api.put(`/api/classroom/${roomId}/requests/${studentNo}/approve`);
+    return await api.put(`/api/classrooms/${roomId}/requests/${studentNo}/approve`);
   },
   async rejectStudent(roomId: number, studentNo: number): Promise<any> {
-    return await api.delete(`/api/classroom/${roomId}/requests/${studentNo}/reject`);
+    return await api.delete(`/api/classrooms/${roomId}/requests/${studentNo}/reject`);
   }
 }
 
