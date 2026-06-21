@@ -15,20 +15,25 @@ const rooms = ref<UserRoom[]>([]);
 const searchQuery = ref('');
 
 onMounted(async () => {
-  if (authStore.userId) {
-    await fetchRooms();
+  // เช็กก่อนว่ามี userId หรือไม่ เหมือนไฟล์เก่า
+  if (!authStore.userId) {
+    isLoadingRooms.value = false;
+    return;
   }
+  await fetchRooms();
 });
 
 const fetchRooms = async () => {
   isLoadingRooms.value = true;
   try {
-    // จำลองดีเลย์นิดหน่อยให้เห็น Loading สวยๆ (ลบออกได้ถ้าระบบจริงเร็วอยู่แล้ว)
-    // await new Promise(r => setTimeout(r, 600)); 
     rooms.value = await ClassroomService.getUserRooms(authStore.userId!);
   } catch (error: any) {
     console.error("Failed to load rooms:", error);
-    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลห้องเรียนได้', 'error');
+    Swal.fire({
+      icon: 'error',
+      title: 'โหลดข้อมูลห้องเรียนไม่สำเร็จ',
+      text: error.message || 'เกิดข้อผิดพลาดบางอย่าง'
+    });
   } finally {
     isLoadingRooms.value = false;
   }
@@ -43,21 +48,29 @@ const filteredRooms = computed(() => {
   );
 });
 
+// 🔥 ลอก Logic เดิมมาเลย
 const enterRoom = async (room: UserRoom) => {
   const targetRoomId = room.room_id; 
-  if (!targetRoomId) return;
+  
+  if (!targetRoomId) {
+    Swal.fire('ข้อผิดพลาด', 'ไม่พบ Room ID สำหรับห้องนี้', 'error');
+    return;
+  }
 
   Swal.fire({ 
-    title: 'กำลังเชื่อมต่อ...', 
-    text: `เข้าสู่ห้อง ${room.room_name}`,
+    title: 'กำลังเข้าสู่ห้องเรียน...', 
+    text: `กำลังเชื่อมต่อ ${room.room_name}`,
     allowOutsideClick: false, 
     didOpen: () => Swal.showLoading(),
     customClass: { popup: 'rounded-2xl' }
   });
 
   try {
+    // ดึงโปรไฟล์ด้วย roomId
     const myProfile: any = await StudentService.getMyProfile(targetRoomId);
     const fullName = `${myProfile.first_name} ${myProfile.last_name}`;
+    
+    // บันทึกลง Store แบบเป๊ะๆ
     authStore.setRoom(targetRoomId, room.room_name, room.role, fullName);
   } catch (error) {
     const fallbackName = room.role === 'admin' ? 'Administrator' : 'User';
@@ -153,7 +166,7 @@ const handleJoinRoom = () => {
       </div>
       <h3 class="text-2xl font-black text-slate-800 mb-2">ยังไม่มี Workspace</h3>
       <p class="text-slate-500 font-medium max-w-sm mb-8 leading-relaxed">
-        คุณยังไม่ได้เข้าร่วมหรือเป็นเจ้าของห้องเรียนใดๆ สร้างพื้นที่ใหม่เพื่อเริ่มต้นจัดการข้อมูลได้เลย
+        บัญชี Discord ของคุณยังไม่ได้เชื่อมต่อกับห้องเรียนใดๆ โปรดติดต่อแอดมินหรือสร้างห้องใหม่
       </p>
       <div class="flex gap-4">
         <button @click="handleCreateRoom" class="bg-blue-600 text-white font-bold px-8 py-3.5 rounded-2xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 active:scale-95 transition-all">
@@ -185,10 +198,10 @@ const handleJoinRoom = () => {
           <h3 class="text-xl font-extrabold text-slate-800 mb-1 tracking-tight truncate">{{ room.room_name }}</h3>
           <div class="flex items-center gap-2.5 mt-3">
             <span 
-              :class="room.role === 'admin' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-100 border-slate-200 text-slate-600'" 
+              :class="room.role === 'admin' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-100 border-slate-200 text-slate-500'" 
               class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border"
             >
-              {{ room.role === 'admin' ? 'Admin' : 'Member' }}
+              {{ room.role }}
             </span>
             <span class="text-slate-300">•</span>
             <span class="text-xs font-bold text-slate-400 flex items-center gap-1">
