@@ -54,7 +54,7 @@ const goToProfileSettings = () => {
               <i class="bi bi-person-fill"></i>
             </div>
             <span class="text-sm font-bold text-slate-700 hidden sm:block tracking-wide">
-              {{ authStore.userId || 'User' }}
+              {{ authStore.firstName }}
             </span>
             <i class="bi bi-chevron-down text-[10px] text-slate-400 ms-1 transition-transform duration-300" :class="{ 'rotate-180': activeDropdown }"></i>
           </button>

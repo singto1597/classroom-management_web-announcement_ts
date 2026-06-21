@@ -26,6 +26,12 @@ onMounted(async () => {
     isLoadingRooms.value = false;
     return;
   }
+  
+  // เรียกฟังก์ชันดึงชื่อ-นามสกุล
+  if (!authStore.firstName) {
+    await authStore.fetchProfile();
+  }
+  
   await fetchRooms();
 });
 
@@ -151,6 +157,9 @@ const submitJoinRoom = async () => {
       <div class="space-y-3">
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-slate-800 tracking-tight">
           Workspaces<span class="text-blue-600">.</span>
+        </h1>
+        <h1 class="text-2xl font-bold">
+          ยินดีต้อนรับ, {{ authStore.firstName }} {{ authStore.lastName }} 👋
         </h1>
         <p class="text-slate-500 text-lg md:text-xl font-medium max-w-xl leading-relaxed">
           เลือกพื้นที่ทำงานของคุณ หรือเริ่มต้นสร้างห้องเรียนใหม่ด้วยรหัสที่ปลอดภัย
