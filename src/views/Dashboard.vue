@@ -20,8 +20,9 @@ onMounted(async () => {
   // พยายามดึง Room Code มาแสดง
   if (authStore.currentRoomId) {
     try {
-      // อ้างอิงจาก OpenAPI GET /api/classroom/{target_id}
-      const res = await api.get(`/api/classroom/${authStore.currentRoomId}`);
+      // ✨ เติม : any ตรงนี้เพื่อบอก TypeScript ว่าไม่ต้องตรวจ Type อย่างเข้มงวด
+      const res: any = await api.get(`/api/classroom/${authStore.currentRoomId}`);
+      
       // หาก Backend ส่ง room_code กลับมาในนี้ด้วย จะดึงมาแสดงทันที
       if (res && res.room_code) {
         roomCode.value = res.room_code;
