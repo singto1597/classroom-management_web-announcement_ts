@@ -1,41 +1,21 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed } from 'vue'; // ลบ ref, onMounted ออก
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { StudentService } from '@/services/student';
-import api from '@/services/api'; // สำหรับยิงดึงข้อมูลห้อง
+// import api from '@/services/api'; ❌ ลบทิ้งไปเลย ไม่ได้ใช้แล้ว
 import Swal from 'sweetalert2';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-// ดึงข้อมูลจาก Store
+// ดึงข้อมูลจาก Store โดยตรงทั้งหมด (ไวและไม่ต้องรอโหลด)
 const userName = computed(() => authStore.currentUserName || 'User');
 const role = computed(() => authStore.currentRole || 'Unknown');
 const isAdmin = computed(() => authStore.isAdmin);
 
-const roomCode = ref<string | null>(null);
-
-onMounted(async () => {
-  // พยายามดึง Room Code มาแสดง
-  if (authStore.currentRoomId) {
-    try {
-      // ✨ เติม : any ตรงนี้เพื่อบอก TypeScript ว่าไม่ต้องตรวจ Type อย่างเข้มงวด
-      const res: any = await api.get(`/api/classroom/${authStore.currentRoomId}?target_type=room`);
-      
-      // หาก Backend ส่ง room_code กลับมาในนี้ด้วย จะดึงมาแสดงทันที
-      if (res && res.room_code) {
-        roomCode.value = res.room_code;
-      } else {
-        // Fallback หาใน localRooms ถ้ามี
-        roomCode.value = 'N/A';
-      }
-    } catch (error) {
-      console.error("Failed to load room details", error);
-      roomCode.value = 'N/A';
-    }
-  }
-});
+// ✨ ดึง roomCode จาก Store ที่ Lobby เซฟไว้ให้ได้เลย!
+const roomCode = computed(() => authStore.currentRoomCode || 'N/A');
 
 const handleChangeRoom = () => {
   authStore.clearRoom();
