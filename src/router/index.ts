@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import MainLayout from '@/layouts/MainLayout.vue';
+// ✨ Import Global Layout สำหรับหน้า Lobby
+import GlobalLayout from '@/layouts/GlobalLayout.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -11,28 +13,32 @@ const router = createRouter({
       component: () => import('@/views/auth/Login.vue'),
       meta: { requiresAuth: false }
     },
-    // ใส่ 2 ก้อนนี้เข้าไปแทนที่ครับ
     {
       path: '/auth/google/callback',
       name: 'google-callback',
-      // ชี้ไปที่ไฟล์ใหม่ที่เราสร้างไว้สำหรับ Google โดยเฉพาะ
       component: () => import('@/views/auth/GoogleCallback.vue'), 
       meta: { requiresAuth: false }
     },
     {
       path: '/auth/discord/callback',
       name: 'discord-callback',
-      // ชี้ไปที่ไฟล์ใหม่ที่เราสร้างไว้สำหรับ Discord โดยเฉพาะ
       component: () => import('@/views/auth/DiscordCallback.vue'), 
       meta: { requiresAuth: false }
     },
+    // ✨ แทนที่ /select-room ด้วย /lobby พร้อมใช้ GlobalLayout
     {
-      // 🛑 ย้ายมาอยู่ตรงนี้! ให้อยู่ระดับนอกสุด จะได้ไม่โดน MainLayout คลุม
-      path: '/select-room',
-      name: 'select-room',
-      component: () => import('@/views/auth/SelectRoom.vue'),
-      meta: { requiresAuth: true }
+      path: '/lobby',
+      component: GlobalLayout,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'lobby',
+          component: () => import('@/views/Lobby.vue'),
+        }
+      ]
     },
+    // --- 📚 ระบบ Classroom (ใช้ MainLayout) ---
     {
       path: '/',
       component: MainLayout,
@@ -91,7 +97,7 @@ const router = createRouter({
           name: 'schedule-manager',
           component: () => import('@/views/schedules/ScheduleManager.vue'),
         },
-        // --- Finance Module ---
+        // --- 💰 Finance Module ---
         {
           path: 'finance',
           name: 'finance-dashboard',
@@ -139,7 +145,7 @@ router.beforeEach((to, from) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
   const currentRoomId = authStore.currentRoomId;
-  const currentRole = authStore.currentRole; // ดึง Role มาเช็คด้วย
+  const currentRole = authStore.currentRole; 
   const isAdmin = authStore.isAdmin;
 
   // 1. ตรวจสอบการล็อกอิน
@@ -147,16 +153,21 @@ router.beforeEach((to, from) => {
     return '/login';
   } 
   
+  // ✨ ล็อกอินแล้วเข้าหน้า login ให้เด้งมาที่ Lobby แทน (เปลี่ยนจาก /select-room)
   if (to.path === '/login' && isAuthenticated) {
-    return '/select-room';
+    return '/lobby';
   }
 
-  // 2. ถ้าล็อกอินแล้วแต่ยังไม่ได้เลือกห้อง (หรือข้อมูลห้องพัง/Role หาย) ให้บังคับไปหน้า Select Room เสมอ
-  if (isAuthenticated && (!currentRoomId || !currentRole) && to.path !== '/select-room') {
-    return '/select-room';
+  // 2. ป้องกันการเข้าหน้าของ Classroom ถ้ายังไม่ได้เลือกห้อง
+  // อนุญาตให้เข้า Global Routes ได้โดยไม่ต้องมีข้อมูลห้อง
+  const isGlobalRoute = to.path.startsWith('/lobby') || to.path === '/login';
+  
+  // ✨ ถ้าล็อกอินแล้ว พยายามเข้าหน้าอื่น (เช่น /dashboard) แต่ไม่มีห้อง/role ให้เด้งกลับมา Lobby
+  if (isAuthenticated && (!currentRoomId || !currentRole) && !isGlobalRoute) {
+    return '/lobby';
   }
 
-  // 3. ตรวจสอบสิทธิ์ Admin (RBAC)
+  // 3. ตรวจสอบสิทธิ์ Admin (RBAC) ภายใน Classroom
   if (to.meta.requiresAdmin && !isAdmin) {
     return '/dashboard'; // โดนเตะกลับแบบเงียบๆ ถ้าไม่ใช่แอดมิน
   }
