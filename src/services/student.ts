@@ -74,6 +74,16 @@ export const StudentService = {
       students,
       user_name: userName
     })
+  },
+
+  async getPendingRequests(roomId: number): Promise<any[]> {
+    return await api.get(`/api/classroom/${roomId}/requests`);
+  },
+  async approveStudent(roomId: number, studentNo: number): Promise<any> {
+    return await api.put(`/api/classroom/${roomId}/requests/${studentNo}/approve`);
+  },
+  async rejectStudent(roomId: number, studentNo: number): Promise<any> {
+    return await api.delete(`/api/classroom/${roomId}/requests/${studentNo}/reject`);
   }
 }
 
