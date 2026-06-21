@@ -1,15 +1,12 @@
-// src/stores/auth.ts
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import router from '@/router';
-import axios from 'axios'; // 🚨 นำเข้า axios หรือ api client ที่คุณใช้
-import { API_BASE_URL } from '@/config'; // ปรับ path ให้ตรงกับ config ของคุณ
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
   const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
-  // 🌟 1. เพิ่ม State สำหรับเก็บชื่อจริง-นามสกุล
+  // 🌟 State สำหรับเก็บชื่อจริง-นามสกุล
   const firstName = ref<string | null>(localStorage.getItem('user_first_name'));
   const lastName = ref<string | null>(localStorage.getItem('user_last_name'));
 
@@ -22,16 +19,25 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value);
   const isAdmin = computed(() => currentRole.value !== 'student' && currentRole.value !== null);
 
-  // 🌟 2. เพิ่มฟังก์ชันไปดึงข้อมูล Profile จาก Backend
+  // 🌟 ฟังก์ชันไปดึงข้อมูล Profile จาก Backend (ใช้ fetch แทน axios)
   const fetchProfile = async () => {
     if (!token.value) return;
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token.value}` }
+      const response = await fetch(`/api/auth/me`, {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token.value}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      if (!response.ok) throw new Error('Failed to fetch profile');
+
+      const data = await response.json();
+      
       // เอาชื่อที่ได้จาก DB มาเซ็ตลงตัวแปร
-      firstName.value = response.data.first_name || 'ไม่ระบุชื่อ';
-      lastName.value = response.data.last_name || '';
+      firstName.value = data.first_name || 'ไม่ระบุชื่อ';
+      lastName.value = data.last_name || '';
       
       // เซฟลง LocalStorage กันเหนียวเวลากด F5
       localStorage.setItem('user_first_name', firstName.value!);
@@ -95,7 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   return {
-    token, userId, firstName, lastName, // Export ออกไปให้ใช้
+    token, userId, firstName, lastName,
     currentRoomId, currentRoomName, currentRoomCode, currentRole,
     isAuthenticated, isAdmin,
     setToken, setUserId, setRoom, clearRoom, logout, fetchProfile
