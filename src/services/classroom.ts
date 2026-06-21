@@ -6,9 +6,9 @@ export const ClassroomService = {
     return await api.get(`/api/classroom/${discordId}/rooms`);
   },
   async createRoom(payload: { room_name: string }): Promise<any> {
-    return await api.post('/api/classrooms/create', payload);
+    return await api.post('/api/classroom/create', payload);
   },
   async joinRoom(payload: { room_code: string; student_no: number; first_name: string; last_name: string }): Promise<any> {
-    return await api.post('/api/classrooms/join', payload);
+    return await api.post('/api/classroom/join', payload);
   }
 };

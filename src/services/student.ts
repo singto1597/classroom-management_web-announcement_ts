@@ -83,7 +83,7 @@ export const StudentService = {
     return await api.put(`/api/classrooms/${roomId}/requests/${studentNo}/approve`);
   },
   async rejectStudent(roomId: number, studentNo: number): Promise<any> {
-    return await api.delete(`/api/classrooms/${roomId}/requests/${studentNo}/reject`);
+    return await api.delete(`/api/classroom/${roomId}/requests/${studentNo}/reject`);
   }
 }
 

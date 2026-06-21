@@ -21,7 +21,7 @@ onMounted(async () => {
   if (authStore.currentRoomId) {
     try {
       // ✨ เติม : any ตรงนี้เพื่อบอก TypeScript ว่าไม่ต้องตรวจ Type อย่างเข้มงวด
-      const res: any = await api.get(`/api/classroom/${authStore.currentRoomId}`);
+      const res: any = await api.get(`/api/classroom/${authStore.currentRoomId}?target_type=room`);
       
       // หาก Backend ส่ง room_code กลับมาในนี้ด้วย จะดึงมาแสดงทันที
       if (res && res.room_code) {
