@@ -38,8 +38,8 @@ const filteredRooms = computed(() => {
   if (!searchQuery.value) return rooms.value;
   const q = searchQuery.value.toLowerCase();
   return rooms.value.filter(r => 
-    r.room_name.toLowerCase().includes(q) || 
-    r.server_id.toLowerCase().includes(q)
+    (r.room_name || '').toLowerCase().includes(q) || 
+    (r.server_id || '').toLowerCase().includes(q)
   );
 });
 
