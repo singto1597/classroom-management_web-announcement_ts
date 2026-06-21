@@ -49,8 +49,8 @@ const filteredRooms = computed(() => {
   );
 });
 
-const enterRoom = async (room: UserRoom) => {
-  if (room.role === 'pending') {
+const enterRoom = async (room: any) => {
+  if (room.status === 'pending') {
     Swal.fire({
       title: 'รอการอนุมัติ',
       text: 'คุณส่งคำขอเข้าร่วมห้องนี้ไปแล้ว กรุณารอครูผู้สอนอนุมัติ',

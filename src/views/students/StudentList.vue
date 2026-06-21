@@ -203,6 +203,7 @@ const rejectJoin = async (studentNo: number) => {
               </td>
               <td class="py-4 px-5 text-center">
                 <span v-if="student.status === 'active'" class="bg-emerald-50 text-emerald-600 py-1 px-3 rounded-full text-[10px] font-bold border border-emerald-100">Active</span>
+                <span v-else-if="student.status === 'pending'" class="bg-amber-50 text-amber-600 py-1 px-3 rounded-full text-[10px] font-bold border border-amber-100">รออนุมัติ</span>
                 <span v-else class="bg-rose-50 text-rose-600 py-1 px-3 rounded-full text-[10px] font-bold border border-rose-100">Inactive</span>
               </td>
               <td class="py-4 px-5 text-center">

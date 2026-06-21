@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   const currentRoomId = ref<number | null>(storedRoomId ? Number(storedRoomId) : null);
   
   const currentRoomName = ref<string | null>(localStorage.getItem('current_room_name'));
-  // ✨ เพิ่ม state สำหรับเก็บ Room Code
+  // ✨ เพิ่มตัวแปรเก็บ Room Code
   const currentRoomCode = ref<string | null>(localStorage.getItem('current_room_code')); 
   const currentRole = ref<string | null>(localStorage.getItem('current_role'));
   const currentUserName = ref<string | null>(localStorage.getItem('current_user_name'));
@@ -34,11 +34,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  // ✨ อัปเดตฟังก์ชัน setRoom ให้รับ roomCode เข้ามาด้วย
+  // ✨ แก้ให้รับพารามิเตอร์ 5 ตัวให้ตรงกับที่ Lobby.vue ส่งมา
   const setRoom = (roomId: number, roomName: string, roomCode: string | null | undefined, role: string, userName: string) => {
     currentRoomId.value = roomId;
     currentRoomName.value = roomName;
-    currentRoomCode.value = roomCode || 'N/A'; // บันทึก Code
+    currentRoomCode.value = roomCode || 'N/A';
     currentRole.value = role;
     currentUserName.value = userName;
 
@@ -73,19 +73,9 @@ export const useAuthStore = defineStore('auth', () => {
   };
 
   return {
-    token,
-    userId, 
-    currentRoomId,
-    currentRoomName,
-    currentRoomCode, // ✨ Export ออกไปให้ใช้
-    currentRole,
-    currentUserName,
-    isAuthenticated,
-    isAdmin,
-    setToken,
-    setUserId, 
-    setRoom,
-    clearRoom,
-    logout,
+    token, userId, currentRoomId, currentRoomName, 
+    currentRoomCode, // ✨ Export ออกไป
+    currentRole, currentUserName, isAuthenticated, isAdmin,
+    setToken, setUserId, setRoom, clearRoom, logout,
   };
 });
