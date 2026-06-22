@@ -45,7 +45,9 @@ const goToMyProfile = async () => {
   <div class="relative overflow-hidden pb-12 bg-slate-50/50 min-h-screen">
     <div class="max-w-7xl mx-auto space-y-6 md:space-y-8 relative z-10 p-4 sm:p-6 md:p-8">
       
+      <!-- 1. HERO SECTION (สีฟ้า และลดขนาดตัวหนังสือ) -->
       <div class="relative bg-gradient-to-br from-blue-700 via-indigo-600 to-violet-700 rounded-[2.5rem] p-6 md:p-10 shadow-[0_10px_40px_-10px_rgba(79,70,229,0.4)] overflow-hidden group">
+        <!-- Glow Effects -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 transition-transform duration-700 group-hover:scale-110"></div>
         <div class="absolute bottom-0 left-10 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl translate-y-1/2 transition-transform duration-700 group-hover:scale-110"></div>
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
@@ -86,6 +88,7 @@ const goToMyProfile = async () => {
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         
+        <!-- 2. TASKS WIDGET -->
         <div class="bg-white rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 p-8 md:p-10 flex flex-col hover:shadow-xl hover:border-blue-200/60 transition-all duration-500 group/card">
           <div class="flex items-center gap-5 mb-8">
             <div class="w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center text-2xl shadow-inner border border-blue-100 group-hover/card:scale-105 transition-transform duration-500">
@@ -128,6 +131,7 @@ const goToMyProfile = async () => {
           </div>
         </div>
 
+        <!-- 3. STUDENTS WIDGET -->
         <div class="bg-white rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/60 p-8 md:p-10 flex flex-col hover:shadow-xl hover:border-emerald-200/60 transition-all duration-500 group/card">
           <div class="flex items-center gap-5 mb-8">
             <div class="w-16 h-16 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center text-2xl shadow-inner border border-emerald-100 group-hover/card:scale-105 transition-transform duration-500">
@@ -137,9 +141,10 @@ const goToMyProfile = async () => {
           </div>
           
           <div class="flex flex-col gap-4 flex-grow">
-            <router-link to="/students" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold p-5 rounded-[1.5rem] shadow-lg shadow-slate-900/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-between group">
+            <!-- ✨ แก้ไขปุ่มรายชื่อเพื่อนให้กลับมาเป็นสีเขียว Gradient แบบดั้งเดิม -->
+            <router-link to="/students" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold p-5 rounded-[1.5rem] shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-between group">
               <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-xl backdrop-blur-md border border-white/10 group-hover:scale-110 transition-transform">📑</div>
+                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-xl backdrop-blur-md border border-white/10 group-hover:scale-110 transition-transform">📑</div>
                 <span class="text-base tracking-wide">ดูรายชื่อเพื่อนทั้งห้อง</span>
               </div>
               <i class="bi bi-arrow-right opacity-70 group-hover:opacity-100 transition-opacity text-xl"></i>
@@ -172,6 +177,7 @@ const goToMyProfile = async () => {
           </div>
         </div>
 
+        <!-- 4. FINANCE WIDGET -->
         <div class="lg:col-span-2 relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 rounded-[2.5rem] shadow-xl shadow-orange-500/20 hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 group border border-orange-400/50">
           <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
           
@@ -201,6 +207,7 @@ const goToMyProfile = async () => {
           </div>
         </div>
 
+        <!-- 5. ROADMAP WIDGET -->
         <div class="lg:col-span-2 group">
           <router-link to="/roadmap" class="bg-slate-900 rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer border border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-6">
