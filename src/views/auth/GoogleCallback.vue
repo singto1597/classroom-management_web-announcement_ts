@@ -31,15 +31,18 @@ onMounted(async () => {
 
     } else {
       // 🔑 โหมดเข้าสู่ระบบ
-      const response = await loginWithGoogle(code);
+      // 🚨 แก้ไขตรงนี้: ใส่ : any ป้องกัน TypeScript แจ้งเตือน
+      const response: any = await loginWithGoogle(code);
       authStore.setToken(response.access_token);
       
-      // 🚨 สำคัญ: ดึงโปรไฟล์ แล้วเช็คว่ามี Prefix (คำนำหน้า) หรือยัง?
+      // เซฟ user_id ลง Store
+      authStore.setUserId(response.user_id);
+      
       await authStore.fetchProfile();
       if (!authStore.isOnboarded) {
-        router.push('/onboarding'); // ยังไม่เคยตั้งชื่อ -> บังคับไปกรอกข้อมูล
+        router.push('/onboarding');
       } else {
-        router.push('/lobby'); // เคยตั้งชื่อแล้ว -> เข้าล็อบบี้ได้เลย
+        router.push('/lobby');
       }
     }
   } catch (err: any) {
@@ -49,6 +52,7 @@ onMounted(async () => {
 });
 const goBackToLogin = () => router.push('/login');
 </script>
+
 <template>
   <div class="min-h-screen flex items-center justify-center bg-slate-50">
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-100 p-10 text-center">

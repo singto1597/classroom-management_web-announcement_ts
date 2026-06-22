@@ -27,10 +27,11 @@ onMounted(async () => {
         customClass: { popup: 'rounded-3xl' }, confirmButtonColor: '#10b981'
       }).then(() => router.push('/dashboard'));
     } else {
-      const response = await loginWithDiscord(code);
+      // 🚨 แก้ไขตรงนี้: ใส่ : any เพื่อบอก TypeScript ว่าเราดึงค่าอะไรก็ได้
+      const response: any = await loginWithDiscord(code);
       authStore.setToken(response.access_token);
       
-      // 🚨 สำคัญที่สุด: เซฟ user_id ลง Store ทันทีที่ได้มาจาก API!
+      // เซฟ user_id ลง Store ทันที
       authStore.setUserId(response.user_id);
       
       await authStore.fetchProfile();
@@ -45,6 +46,7 @@ onMounted(async () => {
     errorMsg.value = err.response?.data?.detail || err.message || 'การยืนยันตัวตนล้มเหลว';
   }
 });
+
 const goBackToLogin = () => router.push('/login');
 </script>
 
