@@ -8,17 +8,18 @@ import Swal from 'sweetalert2';
 const router = useRouter();
 const authStore = useAuthStore();
 
-// ✨ ระบบชื่อใหม่ ดึงจาก authStore โดยตรง (แก้ไขบัคชื่อไม่ขึ้น)
-const userName = computed(() => authStore.currentUserName);
+// ✨ ระบบชื่อใหม่ ดึงจาก authStore โดยตรง
+const userName = computed(() => authStore.currentUserName || 'User');
 const role = computed(() => authStore.currentRole || 'Unknown');
 const isAdmin = computed(() => authStore.isAdmin);
 
 // ✨ ดึง roomCode จาก Store
 const roomCode = computed(() => authStore.currentRoomCode || 'N/A');
 
+// ✨ ฟีเจอร์สลับห้องเรียน (กลับไปหน้า lobby หรือ select-room)
 const handleChangeRoom = () => {
   authStore.clearRoom();
-  router.push('/lobby'); 
+  router.push('/lobby'); // ปรับเป็น /select-room ได้ตาม Route ที่ใช้งานจริง
 };
 
 const goToMyProfile = async () => {
@@ -41,9 +42,8 @@ const goToMyProfile = async () => {
 </script>
 
 <template>
-  <div class="relative overflow-hidden pb-12">
-
-    <div class="max-w-7xl mx-auto space-y-6 md:space-y-8 relative z-10">
+  <div class="relative overflow-hidden pb-12 bg-slate-50/50 min-h-screen">
+    <div class="max-w-7xl mx-auto space-y-6 md:space-y-8 relative z-10 p-4 sm:p-6 md:p-8">
       
       <div class="relative bg-slate-900 rounded-[2.5rem] p-8 md:p-14 shadow-2xl shadow-slate-900/20 overflow-hidden group border border-slate-800">
         <div class="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 transition-transform duration-1000 group-hover:scale-110"></div>
@@ -67,11 +67,19 @@ const goToMyProfile = async () => {
 
             <div class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-3.5 rounded-[1.5rem] flex items-center gap-4 shadow-xl h-full">
               <span class="relative flex h-3 w-3">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                <span :class="isAdmin ? 'bg-emerald-400' : 'bg-blue-400'" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+                <span :class="isAdmin ? 'bg-emerald-500' : 'bg-blue-500'" class="relative inline-flex rounded-full h-3 w-3"></span>
               </span>
               <span class="text-white font-black text-sm tracking-widest uppercase leading-none mt-0.5">{{ role }}</span>
             </div>
+
+            <button 
+              @click="handleChangeRoom"
+              class="h-[3.25rem] w-[3.25rem] bg-white/5 hover:bg-white/10 active:scale-95 backdrop-blur-xl border border-white/10 rounded-[1.25rem] flex items-center justify-center text-white transition-all shadow-xl"
+              title="สลับห้องเรียน"
+            >
+              <i class="bi bi-arrow-left-right text-lg"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -106,6 +114,10 @@ const goToMyProfile = async () => {
                 <i class="bi bi-arrow-right text-slate-400 group-hover:text-blue-600"></i>
               </div>
             </router-link>
+
+            <div v-else class="flex items-center justify-center p-5 bg-slate-50/50 rounded-[1.5rem] border border-dashed border-slate-200 text-slate-400 font-medium text-sm">
+              <i class="bi bi-lock-fill me-2"></i> เฉพาะแอดมินที่เพิ่มงานได้
+            </div>
           </div>
 
           <div class="mt-auto pt-6 border-t border-slate-100">
@@ -142,6 +154,21 @@ const goToMyProfile = async () => {
                 <i class="bi bi-person-badge text-slate-400 group-hover:text-blue-600"></i>
               </div>
             </button>
+
+            <template v-if="isAdmin">
+              <router-link to="/students/add" class="w-full bg-slate-50 hover:bg-white hover:shadow-lg active:scale-[0.98] text-slate-700 font-bold p-5 rounded-[1.5rem] border border-slate-100 hover:border-emerald-100 transition-all duration-300 flex items-center justify-between group text-left mt-2">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl border border-slate-100 group-hover:scale-110 transition-transform">➕</div>
+                  <span class="group-hover:text-emerald-600 transition-colors text-base">เพิ่มนักเรียนใหม่</span>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-slate-200 group-hover:border-emerald-200 group-hover:bg-emerald-50 transition-colors shadow-sm">
+                  <i class="bi bi-person-plus text-slate-400 group-hover:text-emerald-600"></i>
+                </div>
+              </router-link>
+              <button class="text-xs font-bold text-slate-400 hover:text-emerald-600 mt-2 transition-colors flex items-center justify-center gap-1.5 py-2 active:scale-95 w-full">
+                <i class="bi bi-file-earmark-excel"></i> Export ข้อมูลเป็น Excel
+              </button>
+            </template>
           </div>
         </div>
 
@@ -153,15 +180,42 @@ const goToMyProfile = async () => {
               <div class="w-20 h-20 md:w-24 md:h-24 bg-white/20 backdrop-blur-xl rounded-[1.5rem] flex items-center justify-center text-4xl shadow-inner border border-white/30 shrink-0 group-hover:rotate-12 transition-transform duration-500">💰</div>
               <div>
                 <h2 class="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight drop-shadow-sm">การเงินห้อง</h2>
-                <p class="text-orange-100 font-bold text-sm md:text-base tracking-wide">ระบบจัดการรายรับ-จ่ายแบบโปร่งใส</p>
+                <p class="text-orange-100 font-bold text-sm md:text-base tracking-wide">จัดการรายรับ-จ่าย, โปรเจกต์เก็บเงิน, และติดตามบิล</p>
               </div>
             </div>
             
-            <div class="grid grid-cols-2 md:flex gap-4 w-full md:w-auto">
-              <router-link to="/finance" class="flex-1 flex justify-center py-4 px-6 bg-amber-950 hover:bg-slate-900 text-white text-sm font-bold rounded-2xl transition-all shadow-lg active:scale-95"><i class="bi bi-bar-chart-fill me-2"></i> สรุปยอด</router-link>
-              <router-link to="/finance/collections" class="flex-1 flex justify-center py-4 px-6 bg-white/90 hover:bg-white text-amber-900 text-sm font-bold rounded-2xl transition-all shadow-lg backdrop-blur-md active:scale-95"><i class="bi bi-box-seam-fill me-2"></i> โปรเจกต์</router-link>
+            <div class="grid grid-cols-2 md:flex md:flex-wrap md:justify-end gap-3 md:gap-4 w-full md:w-auto">
+              <router-link to="/finance" class="flex items-center justify-center py-4 px-6 bg-amber-950 hover:bg-slate-900 text-white text-sm font-bold rounded-2xl transition-all shadow-lg active:scale-95">
+                <i class="bi bi-bar-chart-fill me-2"></i> สรุปยอด
+              </router-link>
+              <router-link to="/finance/transactions" class="flex items-center justify-center py-4 px-6 bg-white/90 hover:bg-white text-amber-900 text-sm font-bold rounded-2xl transition-all shadow-lg backdrop-blur-md active:scale-95">
+                <i class="bi bi-receipt-cutoff me-2"></i> ประวัติ
+              </router-link>
+              <router-link to="/finance/collections" class="flex items-center justify-center py-4 px-6 bg-white/90 hover:bg-white text-amber-900 text-sm font-bold rounded-2xl transition-all shadow-lg backdrop-blur-md active:scale-95">
+                <i class="bi bi-box-seam-fill me-2"></i> โปรเจกต์
+              </router-link>
+              <router-link v-if="isAdmin" to="/finance/debtors" class="flex items-center justify-center py-4 px-6 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-2xl transition-all shadow-lg border border-rose-500 active:scale-95">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> ทวงหนี้
+              </router-link>
             </div>
           </div>
+        </div>
+
+        <div class="lg:col-span-2 group">
+          <router-link to="/roadmap" class="bg-slate-900 rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 cursor-pointer border border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+              <div class="w-16 h-16 bg-slate-800 rounded-[1.5rem] flex items-center justify-center text-3xl shadow-inner border border-slate-700 shrink-0 group-hover:scale-110 transition-transform duration-500">
+                🗺️
+              </div>
+              <div>
+                <h2 class="text-xl md:text-2xl font-bold text-white mb-1">Class Roadmap & Committee</h2>
+                <p class="text-slate-400 font-medium text-sm">แผนการดำเนินงานของคณะกรรมการห้อง</p>
+              </div>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white group-hover:bg-blue-600 group-hover:shadow-lg group-hover:shadow-blue-500/30 transition-all shrink-0">
+              <i class="bi bi-chevron-right text-xl"></i>
+            </div>
+          </router-link>
         </div>
 
       </div>
