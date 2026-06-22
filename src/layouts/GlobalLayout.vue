@@ -27,46 +27,58 @@ const logout = () => {
   authStore.logout();
 };
 
-// 🌟 ฟีเจอร์ใหม่: คู่มือการผูกบัญชี (Sync Accounts)
-const goToProfileSettings = () => {
+// 🌟 ฟีเจอร์ใหม่: ระบบจัดการบัญชี (Smart Link Accounts)
+const goToProfileSettings = async () => {
   closeDropdown();
+  // อัปเดตข้อมูลล่าสุดก่อนแสดงผล
+  await authStore.fetchProfile();
+
+  const isDiscordLinked = !!authStore.discordId;
+  const isGoogleLinked = !!authStore.googleId;
+
   Swal.fire({
-    title: 'ตั้งค่าการผูกบัญชีกลาง',
+    title: '<i class="bi bi-shield-lock-fill text-3xl text-slate-800"></i><br>จัดการบัญชีและการเชื่อมต่อ',
     html: `
       <div class="text-left mt-4 space-y-4">
-        <p class="text-sm text-slate-600 font-medium">จัดการการเชื่อมต่อแพลตฟอร์มต่างๆ เพื่อรวมข้อมูลห้องเรียนของคุณให้เป็นหนึ่งเดียว</p>
+        <p class="text-sm text-slate-500 font-medium">จัดการเชื่อมต่อแพลตฟอร์มต่างๆ เพื่อป้องกันการสูญหายของข้อมูลห้องเรียน</p>
         
-        <div class="bg-[#5865F2]/5 border border-[#5865F2]/20 p-5 rounded-[1.5rem] relative overflow-hidden group">
-          <div class="absolute top-0 right-0 w-24 h-24 bg-[#5865F2]/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4"></div>
-          <h4 class="font-black text-[#5865F2] flex items-center gap-2 mb-3 text-lg">
-            <i class="bi bi-discord text-2xl"></i> เชื่อมต่อ Discord
-          </h4>
-          <p class="text-sm text-slate-700 font-medium mb-4 leading-relaxed">
-            เข้าไปที่เซิร์ฟเวอร์ Discord ของห้องเรียน<br>
-            เลือกช่องแชท <b class="text-slate-900">#bot-commands</b><br>
-            พิมพ์คำสั่ง <span class="bg-white px-2.5 py-1 rounded-lg text-[#5865F2] font-mono font-bold shadow-sm border border-slate-100">/sync_me</span> แล้วระบุเลขที่ของคุณ
-          </p>
-          <div class="text-xs text-emerald-700 font-bold bg-emerald-100/50 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200/50">
-            <i class="bi bi-check-circle-fill"></i> ระบบจะดึงข้อมูลมารวมร่างกันอัตโนมัติ!
+        <div class="p-4 rounded-[1.5rem] border ${isGoogleLinked ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-200'} flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border border-slate-100">
+              <i class="bi bi-google text-rose-500 text-lg"></i>
+            </div>
+            <div>
+              <p class="font-bold text-slate-800 leading-tight">Google Account</p>
+              <p class="text-[11px] font-bold mt-0.5 ${isGoogleLinked ? 'text-emerald-600' : 'text-slate-400'}">
+                ${isGoogleLinked ? '<i class="bi bi-check-circle-fill"></i> เชื่อมต่อแล้ว' : 'ยังไม่ได้เชื่อมต่อ'}
+              </p>
+            </div>
           </div>
+          ${!isGoogleLinked ? `<a href="${import.meta.env.VITE_GOOGLE_AUTH_URL || '#'}" class="px-4 py-2 bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
         </div>
 
-        <div class="bg-rose-50/50 border border-rose-100 p-5 rounded-[1.5rem]">
-          <h4 class="font-black text-rose-600 flex items-center gap-2 mb-2 text-lg">
-            <i class="bi bi-google text-xl"></i> เชื่อมต่อ Google
-          </h4>
-          <p class="text-sm text-slate-600 font-medium leading-relaxed">
-            ระบบทำการ <b class="text-slate-800">ผสานบัญชีอัตโนมัติ (Auto-Merge)</b> ให้เรียบร้อยแล้ว หากคุณใช้อีเมล Google ตรงกับอีเมลในระบบ
-          </p>
+        <div class="p-4 rounded-[1.5rem] border ${isDiscordLinked ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-200'} flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm border border-slate-100">
+              <i class="bi bi-discord text-[#5865F2] text-xl"></i>
+            </div>
+            <div>
+              <p class="font-bold text-slate-800 leading-tight">Discord Account</p>
+              <p class="text-[11px] font-bold mt-0.5 ${isDiscordLinked ? 'text-emerald-600' : 'text-slate-400'}">
+                ${isDiscordLinked ? '<i class="bi bi-check-circle-fill"></i> เชื่อมต่อแล้ว' : 'ยังไม่ได้เชื่อมต่อ'}
+              </p>
+            </div>
+          </div>
+          ${!isDiscordLinked ? `<a href="${import.meta.env.VITE_DISCORD_AUTH_URL || '#'}" class="px-4 py-2 bg-white border border-slate-200 hover:border-[#5865F2] hover:text-[#5865F2] text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
         </div>
       </div>
     `,
-    icon: 'info',
-    confirmButtonText: 'รับทราบ',
+    showConfirmButton: true,
+    confirmButtonText: 'ปิดหน้าต่าง',
     confirmButtonColor: '#0f172a',
     customClass: {
       popup: 'rounded-[2.5rem] shadow-2xl border border-slate-100 p-6',
-      confirmButton: 'rounded-2xl px-8 py-3.5 font-black tracking-wide transition-all active:scale-95 shadow-lg shadow-slate-900/20'
+      confirmButton: 'rounded-xl px-8 py-3 font-bold tracking-wide'
     }
   });
 };
@@ -110,7 +122,7 @@ const goToProfileSettings = () => {
               </div>
               <div class="px-2 space-y-1">
                 <button @click="goToProfileSettings" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 rounded-xl transition-all duration-200 flex items-center gap-3">
-                  <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center"><i class="bi bi-link-45deg text-slate-400 text-lg"></i></div> ผูกบัญชีระบบ
+                  <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center"><i class="bi bi-link-45deg text-slate-400 text-lg"></i></div> จัดการผูกบัญชี
                 </button>
                 <div class="h-px bg-slate-100 my-2 mx-2"></div>
                 <button @click="logout" class="w-full text-left px-4 py-2.5 text-sm font-black text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all duration-200 flex items-center gap-3">

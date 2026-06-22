@@ -6,8 +6,12 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
   const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
+  // 🌟 State สำหรับเก็บข้อมูลโปรไฟล์และสถานะการผูกบัญชี
   const firstName = ref<string | null>(localStorage.getItem('user_first_name'));
   const lastName = ref<string | null>(localStorage.getItem('user_last_name'));
+  const email = ref<string | null>(localStorage.getItem('user_email'));
+  const discordId = ref<string | null>(localStorage.getItem('user_discord_id'));
+  const googleId = ref<string | null>(localStorage.getItem('user_google_id'));
 
   const storedRoomId = localStorage.getItem('current_room_id');
   const currentRoomId = ref<number | null>(storedRoomId ? Number(storedRoomId) : null);
@@ -35,14 +39,23 @@ export const useAuthStore = defineStore('auth', () => {
           'Content-Type': 'application/json'
         }
       });
+
       if (!response.ok) throw new Error('Failed to fetch profile');
+
       const data = await response.json();
       
       firstName.value = data.first_name || '';
       lastName.value = data.last_name || '';
+      email.value = data.email || '';
+      discordId.value = data.discord_id ? String(data.discord_id) : null;
+      googleId.value = data.google_id ? String(data.google_id) : null;
       
       localStorage.setItem('user_first_name', firstName.value!);
       localStorage.setItem('user_last_name', lastName.value!);
+      if (email.value) localStorage.setItem('user_email', email.value);
+      if (discordId.value) localStorage.setItem('user_discord_id', discordId.value);
+      if (googleId.value) localStorage.setItem('user_google_id', googleId.value);
+
     } catch (error) {
       console.error("Failed to fetch user profile", error);
     }
@@ -93,6 +106,9 @@ export const useAuthStore = defineStore('auth', () => {
     userId.value = null;
     firstName.value = null;
     lastName.value = null;
+    email.value = null;
+    discordId.value = null;
+    googleId.value = null;
     clearRoom();
     localStorage.clear();
     router.push('/login');
@@ -100,6 +116,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     token, userId, firstName, lastName, currentUserName,
+    email, discordId, googleId, // 🌟 Export สถานะการผูกบัญชี
     currentRoomId, currentRoomName, currentRoomCode, currentRole,
     isAuthenticated, isAdmin,
     setToken, setUserId, setRoom, clearRoom, logout, fetchProfile
