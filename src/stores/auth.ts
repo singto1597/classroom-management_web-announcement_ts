@@ -3,53 +3,66 @@ import { ref, computed } from 'vue';
 import router from '@/router';
 import api from '@/services/api'; 
 
-export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string | null>(localStorage.getItem('access_token'));
-  const userId = ref<string | null>(localStorage.getItem('user_id_str'));
-  
-  const prefix = ref<string | null>(localStorage.getItem('user_prefix'));
-  const firstName = ref<string | null>(localStorage.getItem('user_first_name'));
-  const lastName = ref<string | null>(localStorage.getItem('user_last_name'));
-  const email = ref<string | null>(localStorage.getItem('user_email'));
-  const discordId = ref<string | null>(localStorage.getItem('user_discord_id'));
-  const googleId = ref<string | null>(localStorage.getItem('user_google_id'));
+// ✨ ฟังก์ชันกวาดล้างข้อมูลผี (Ghost Data Cleaner)
+// ถ้าไปเจอคำว่า "null" ในระบบ ให้เตะทิ้งเป็นค่าว่างทันที
+const safeGetItem = (key: string) => {
+  const val = localStorage.getItem(key);
+  if (!val || val === 'null' || val === 'undefined' || val === 'ไม่ระบุชื่อ') return null;
+  return val;
+};
 
-  const storedRoomId = localStorage.getItem('current_room_id');
+export const useAuthStore = defineStore('auth', () => {
+  // ดึงค่าผ่าน safeGetItem ทั้งหมด
+  const token = ref<string | null>(safeGetItem('access_token'));
+  const userId = ref<string | null>(safeGetItem('user_id_str'));
+  
+  const prefix = ref<string | null>(safeGetItem('user_prefix'));
+  const firstName = ref<string | null>(safeGetItem('user_first_name'));
+  const lastName = ref<string | null>(safeGetItem('user_last_name'));
+  const email = ref<string | null>(safeGetItem('user_email'));
+  const discordId = ref<string | null>(safeGetItem('user_discord_id'));
+  const googleId = ref<string | null>(safeGetItem('user_google_id'));
+
+  const storedRoomId = safeGetItem('current_room_id');
   const currentRoomId = ref<number | null>(storedRoomId ? Number(storedRoomId) : null);
-  const currentRoomName = ref<string | null>(localStorage.getItem('current_room_name'));
-  const currentRoomCode = ref<string | null>(localStorage.getItem('current_room_code')); 
-  const currentRole = ref<string | null>(localStorage.getItem('current_role'));
+  const currentRoomName = ref<string | null>(safeGetItem('current_room_name'));
+  const currentRoomCode = ref<string | null>(safeGetItem('current_room_code')); 
+  const currentRole = ref<string | null>(safeGetItem('current_role'));
 
   const isAuthenticated = computed(() => !!token.value);
   const isAdmin = computed(() => currentRole.value !== 'student' && currentRole.value !== null);
 
   const isOnboarded = computed(() => !!prefix.value && prefix.value.trim() !== '');
 
+  // ประกอบชื่อให้สมบูรณ์
   const currentUserName = computed(() => {
     const p = prefix.value || '';
-    const f = firstName.value && firstName.value !== 'ไม่ระบุชื่อ' ? firstName.value : '';
+    const f = firstName.value || '';
     const l = lastName.value || '';
     const full = `${p}${f} ${l}`.trim();
-    return full || 'ผู้ใช้งานระบบ';
+    return full || 'ผู้ใช้งานระบบ'; // ถ้าว่างจริง จะตกมาที่คำนี้แทน null
   });
 
+  const isFetchingProfile = ref(false); // 🚨 ตัวล็อกป้องกันการยิง API ซ้ำซ้อน
+
   const fetchProfile = async () => {
-    if (!token.value) return;
+    if (!token.value || isFetchingProfile.value) return;
+    
+    isFetchingProfile.value = true;
     try {
       const data: any = await api.get(`/api/auth/me`);
       
-      // 🚨 สำคัญมาก! เติมเส้นเลือดใหญ่: เซฟ ID เสมอ
       if (data.id) setUserId(data.id);
       
-      const validFirstName = data.first_name !== 'ไม่ระบุชื่อ' ? data.first_name : '';
-      
-      prefix.value = data.prefix || '';
-      firstName.value = validFirstName || '';
-      lastName.value = data.last_name || '';
-      email.value = data.email || '';
+      // กรองข้อมูลจาก API อีกชั้น เผื่อ Database ส่งข้อความ 'null' มา
+      prefix.value = data.prefix && data.prefix !== 'null' ? data.prefix : '';
+      firstName.value = data.first_name && data.first_name !== 'null' && data.first_name !== 'ไม่ระบุชื่อ' ? data.first_name : '';
+      lastName.value = data.last_name && data.last_name !== 'null' ? data.last_name : '';
+      email.value = data.email && data.email !== 'null' ? data.email : '';
       discordId.value = data.discord_id ? String(data.discord_id) : null;
       googleId.value = data.google_id ? String(data.google_id) : null;
       
+      // เซฟลง LocalStorage อย่างปลอดภัย
       if (prefix.value) localStorage.setItem('user_prefix', prefix.value);
       else localStorage.removeItem('user_prefix');
 
@@ -65,6 +78,8 @@ export const useAuthStore = defineStore('auth', () => {
 
     } catch (error) {
       console.error("Failed to fetch user profile", error);
+    } finally {
+      isFetchingProfile.value = false;
     }
   };
 
