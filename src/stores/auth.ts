@@ -7,7 +7,6 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
   const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
-  // 🌟 เพิ่ม Prefix เข้ามา
   const prefix = ref<string | null>(localStorage.getItem('user_prefix'));
   const firstName = ref<string | null>(localStorage.getItem('user_first_name'));
   const lastName = ref<string | null>(localStorage.getItem('user_last_name'));
@@ -24,7 +23,6 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value);
   const isAdmin = computed(() => currentRole.value !== 'student' && currentRole.value !== null);
 
-  // ✨ ถ้ามีคำนำหน้า (Prefix) ถือว่ากรอกข้อมูลครบแล้ว!
   const isOnboarded = computed(() => !!prefix.value && prefix.value.trim() !== '');
 
   const currentUserName = computed(() => {
@@ -39,6 +37,9 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return;
     try {
       const data: any = await api.get(`/api/auth/me`);
+      
+      // 🚨 สำคัญมาก! เติมเส้นเลือดใหญ่: เซฟ ID เสมอ
+      if (data.id) setUserId(data.id);
       
       const validFirstName = data.first_name !== 'ไม่ระบุชื่อ' ? data.first_name : '';
       

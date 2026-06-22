@@ -30,7 +30,9 @@ onMounted(async () => {
       const response = await loginWithDiscord(code);
       authStore.setToken(response.access_token);
       
-      // 🚨 ตรวจสอบ Prefix เพื่อบังคับ Onboarding
+      // 🚨 สำคัญที่สุด: เซฟ user_id ลง Store ทันทีที่ได้มาจาก API!
+      authStore.setUserId(response.user_id);
+      
       await authStore.fetchProfile();
       if (!authStore.isOnboarded) {
         router.push('/onboarding');
@@ -45,6 +47,7 @@ onMounted(async () => {
 });
 const goBackToLogin = () => router.push('/login');
 </script>
+
 <template>
   <div class="min-h-screen flex items-center justify-center bg-slate-50">
     <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-100 p-10 text-center">
