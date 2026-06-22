@@ -79,6 +79,26 @@ const goToMyProfile = async () => {
   }
 };
 
+const showAccountInfo = () => {
+  closeDropdowns();
+  Swal.fire({
+    title: 'ข้อมูลบัญชีระบบ',
+    html: `
+      <div class="text-left mt-4 space-y-3">
+        <p class="text-sm text-gray-600"><b>Discord ID:</b> <span class="bg-gray-100 px-2 py-1 rounded font-mono">${authStore.discordId || 'ยังไม่ระบุ'}</span></p>
+        <p class="text-sm text-gray-600"><b>Room Role:</b> <span class="uppercase font-bold text-blue-600">${authStore.currentRole}</span></p>
+      </div>
+    `,
+    icon: 'info',
+    confirmButtonText: 'ปิด',
+    confirmButtonColor: '#3b82f6',
+    customClass: {
+      popup: 'rounded-2xl shadow-2xl border border-gray-100',
+      confirmButton: 'rounded-xl px-6'
+    }
+  });
+};
+
 const logout = () => {
   closeDropdowns();
   authStore.logout();
@@ -88,13 +108,19 @@ const logout = () => {
 const goToProfileSettings = async () => {
   closeDropdowns();
   
-  // โหลดสถานะล่าสุดจาก Backend ก่อนเปิดหน้าต่าง
   Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
   await authStore.fetchProfile();
   Swal.close();
 
   const isDiscordLinked = !!authStore.discordId;
   const isGoogleLinked = !!authStore.googleId;
+
+  // 🚀 ประกอบ URL สำหรับ OAuth สดๆ จาก .env
+  const discordScope = encodeURIComponent('identify email');
+  const discordUrl = `https://discord.com/api/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(import.meta.env.VITE_DISCORD_REDIRECT_URI)}&response_type=code&scope=${discordScope}`;
+
+  const googleScope = encodeURIComponent('openid email profile');
+  const googleUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(import.meta.env.VITE_GOOGLE_REDIRECT_URI)}&response_type=code&scope=${googleScope}`;
 
   Swal.fire({
     title: '<i class="bi bi-shield-lock-fill text-3xl text-slate-800"></i><br>จัดการบัญชีและการเชื่อมต่อ',
@@ -114,7 +140,7 @@ const goToProfileSettings = async () => {
               </p>
             </div>
           </div>
-          ${!isGoogleLinked ? `<a href="${import.meta.env.VITE_GOOGLE_AUTH_URL || '#'}" class="px-4 py-2 bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
+          ${!isGoogleLinked ? `<a href="${googleUrl}" class="px-4 py-2 bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
         </div>
 
         <div class="p-4 rounded-[1.5rem] border ${isDiscordLinked ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-200'} flex items-center justify-between">
@@ -129,7 +155,7 @@ const goToProfileSettings = async () => {
               </p>
             </div>
           </div>
-          ${!isDiscordLinked ? `<a href="${import.meta.env.VITE_DISCORD_AUTH_URL || '#'}" class="px-4 py-2 bg-white border border-slate-200 hover:border-[#5865F2] hover:text-[#5865F2] text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
+          ${!isDiscordLinked ? `<a href="${discordUrl}" class="px-4 py-2 bg-white border border-slate-200 hover:border-[#5865F2] hover:text-[#5865F2] text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
         </div>
       </div>
     `,
@@ -145,7 +171,7 @@ const goToProfileSettings = async () => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-[#f1f5f9] overflow-hidden font-sans relative">
+  <div class="flex h-screen bg-gray-50 overflow-hidden font-sans relative">
     
     <div 
       v-if="activeDropdown" 
@@ -153,66 +179,74 @@ const goToProfileSettings = async () => {
       @click="closeDropdowns"
     ></div>
 
-    <aside class="hidden md:flex md:flex-shrink-0 relative z-50 m-4 me-0">
-      <div class="flex flex-col w-[260px] bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/50 h-full overflow-hidden">
-        
+    <aside class="hidden md:flex md:flex-shrink-0 relative z-50">
+      <div class="flex flex-col w-64 bg-white border-r border-gray-100 shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] h-full">
         <RouterLink 
           to="/dashboard" 
-          class="flex items-center h-24 px-8 bg-slate-900 transition-all duration-300 cursor-pointer shrink-0 group relative overflow-hidden"
+          active-class="_no_effects_"
+          exact-active-class="_no_effects_"
+          class="flex items-center h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all duration-300 cursor-pointer shrink-0"
         >
-          <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center me-4 group-hover:scale-110 transition-transform duration-500 border border-white/10 backdrop-blur-md">
-            <i class="bi bi-box-fill text-white text-xl"></i>
-          </div>
-          <span class="text-white text-xl font-black tracking-widest relative z-10">SYNC<span class="font-light opacity-70">ROOM</span></span>
+          <i class="bi bi-box-fill text-white text-xl me-3 opacity-90"></i>
+          <span class="text-white text-lg font-black tracking-widest">SYNC<span class="font-light opacity-80">ROOM</span></span>
         </RouterLink>
 
-        <div class="flex-1 flex flex-col overflow-y-auto px-4 py-6 space-y-2">
-          <RouterLink 
-            v-for="item in menuItems" 
-            :key="item.path"
-            :to="item.path"
-            class="flex items-center px-5 py-4 text-sm font-bold rounded-2xl transition-all duration-300 group relative overflow-hidden"
-            :class="route.path.startsWith(item.path) && item.path !== '/dashboard' || (route.path === '/dashboard' && item.path === '/dashboard') ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'"
-          >
-            <i :class="['bi', item.icon, 'text-xl me-4 transition-transform duration-500 group-hover:scale-125', route.path.startsWith(item.path) && item.path !== '/dashboard' || (route.path === '/dashboard' && item.path === '/dashboard') ? 'text-blue-400 scale-110' : 'text-slate-400']"></i>
-            <span class="tracking-wide">{{ item.name }}</span>
-          </RouterLink>
-        </div>
+        <div class="flex-1 flex flex-col overflow-y-auto">
+          <nav class="flex-1 px-4 py-6 space-y-1.5">
+            <RouterLink 
+              v-for="item in menuItems" 
+              :key="item.path"
+              :to="item.path"
+              class="flex items-center px-4 py-3.5 text-sm font-semibold rounded-xl transition-all duration-200 group"
+              :class="route.path.startsWith(item.path) && item.path !== '/dashboard' || (route.path === '/dashboard' && item.path === '/dashboard') ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'"
+            >
+              <i :class="['bi', item.icon, 'text-lg me-4 transition-transform duration-200 group-hover:scale-110', route.path.startsWith(item.path) && item.path !== '/dashboard' || (route.path === '/dashboard' && item.path === '/dashboard') ? 'scale-110' : '']"></i>
+              {{ item.name }}
+            </RouterLink>
+          </nav>
 
-        <div class="p-4 border-t border-slate-100 bg-slate-50/50">
-          <div class="flex items-center justify-between p-3 rounded-[1.25rem] hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-md transition-all duration-300 group cursor-pointer relative" @click.stop="toggleDropdown('sidebarSettings')">
-            <div class="flex items-center overflow-hidden flex-1">
-              <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-black text-sm shrink-0 group-hover:bg-slate-800 group-hover:text-white transition-colors duration-300">
-                {{ avatarChar }}
+          <div class="p-3 border-t border-gray-100 bg-gray-50/50 relative">
+            <div class="flex items-center justify-between p-2 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-sm transition-all group">
+              <div class="flex items-center overflow-hidden flex-1 cursor-pointer" @click="showAccountInfo">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-inner border border-blue-100 shrink-0">
+                  {{ avatarChar }}
+                </div>
+                <div class="ms-3 overflow-hidden">
+                  <p class="text-sm font-bold text-gray-800 truncate leading-none mb-1">{{ displayName }}</p>
+                  <p class="text-[10px] tracking-wider text-blue-500 font-bold uppercase truncate leading-none">{{ authStore.currentRole || 'User' }}</p>
+                </div>
               </div>
-              <div class="ms-3 overflow-hidden">
-                <p class="text-sm font-bold text-slate-800 truncate leading-none mb-1.5">{{ authStore.firstName || 'User' }}</p>
-                <p class="text-[9px] tracking-widest text-slate-400 font-black uppercase truncate leading-none">{{ authStore.currentRole || 'User' }}</p>
-              </div>
+              
+              <button 
+                @click.stop="toggleDropdown('sidebarSettings')"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors shrink-0 ms-1"
+                :class="{'bg-gray-200 text-gray-800': activeDropdown === 'sidebarSettings'}"
+              >
+                <i class="bi bi-gear-fill text-lg"></i>
+              </button>
             </div>
-            <i class="bi bi-three-dots-vertical text-slate-400"></i>
-            
-            <transition name="fade-scale">
-              <div v-if="activeDropdown === 'sidebarSettings'" class="absolute bottom-full left-0 mb-4 w-[240px] bg-white rounded-[1.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 py-3 z-50 origin-bottom-left cursor-default" @click.stop>
-                <div class="px-5 py-2 mb-2 border-b border-slate-50">
-                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">การจัดการ</p>
+
+            <transition name="fade-up">
+              <div v-if="activeDropdown === 'sidebarSettings'" class="absolute bottom-full left-4 mb-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 transform origin-bottom-left">
+                <div class="px-4 py-2 mb-1 border-b border-gray-50">
+                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">จัดการบัญชี</p>
                 </div>
-                <div class="px-2 space-y-1">
-                  <button @click="goToMyProfile" class="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500"><i class="bi bi-person-badge"></i></div> โปรไฟล์ของฉัน
-                  </button>
-                  <button @click="goToProfileSettings" class="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500"><i class="bi bi-link-45deg"></i></div> จัดการผูกบัญชี
-                  </button>
-                  <button @click="handleChangeRoom" class="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500"><i class="bi bi-arrow-left-right"></i></div> สลับห้องเรียน
-                  </button>
-                  <div class="h-px bg-slate-100 my-2 mx-2"></div>
-                  <button @click="logout" class="w-full text-left px-4 py-3 text-sm font-black text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-colors flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-400"><i class="bi bi-power"></i></div> ออกจากระบบ
-                  </button>
-                </div>
+                <button @click.stop="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-person-badge text-lg"></i> โปรไฟล์ของฉัน
+                </button>
+                <button @click.stop="showAccountInfo" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-info-circle text-lg"></i> ข้อมูลระบบ
+                </button>
+                <button @click.stop="goToProfileSettings" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-link-45deg text-lg"></i> จัดการผูกบัญชี
+                </button>
+                <button @click.stop="handleChangeRoom" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-arrow-left-right text-lg"></i> สลับห้องเรียน
+                </button>
+                <div class="h-px bg-gray-100 my-1"></div>
+                <button @click.stop="logout" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-box-arrow-right text-lg"></i> ออกจากระบบ
+                </button>
               </div>
             </transition>
           </div>
@@ -223,80 +257,171 @@ const goToProfileSettings = async () => {
     <Transition name="fade">
       <div 
         v-if="isSidebarOpen" 
-        class="fixed inset-0 z-40 md:hidden bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        class="fixed inset-0 z-40 md:hidden bg-gray-900/40 backdrop-blur-sm transition-opacity"
         @click="isSidebarOpen = false"
       ></div>
     </Transition>
 
     <div 
-      class="fixed inset-y-0 left-0 z-50 w-72 bg-white transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) md:hidden shadow-2xl flex flex-col rounded-r-[2rem] overflow-hidden"
+      class="fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) md:hidden shadow-2xl flex flex-col"
       :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
-      <div class="flex items-center justify-between h-20 px-6 bg-slate-900 shrink-0">
+      <div class="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700 shrink-0">
         <RouterLink 
           to="/dashboard" 
           @click="isSidebarOpen = false" 
           class="flex items-center h-16 hover:opacity-80 transition cursor-pointer"
         >
-          <span class="text-white text-xl font-black tracking-widest">SYNC<span class="font-light opacity-90">ROOM</span></span>
+          <span class="text-white text-lg font-black tracking-widest">SYNC<span class="font-light opacity-80">ROOM</span></span>
         </RouterLink>
-        <button @click="isSidebarOpen = false" class="w-8 h-8 flex items-center justify-center bg-white/20 text-white rounded-full hover:bg-white/30 transition-colors active:scale-95">
-          <i class="bi bi-x-lg"></i>
+        <button @click="isSidebarOpen = false" class="text-white/80 hover:text-white p-1 rounded-lg transition-colors">
+          <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
       
-      <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
         <RouterLink 
           v-for="item in menuItems" 
           :key="item.path"
           :to="item.path"
           @click="isSidebarOpen = false"
-          class="flex items-center px-4 py-4 text-sm font-bold rounded-2xl transition-all"
-          :class="route.path.startsWith(item.path) && item.path !== '/dashboard' || (route.path === '/dashboard' && item.path === '/dashboard') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'text-slate-500 hover:bg-slate-50'"
+          class="flex items-center px-4 py-3.5 text-sm font-semibold rounded-xl transition-all"
+          :class="route.path.startsWith(item.path) && item.path !== '/dashboard' || (route.path === '/dashboard' && item.path === '/dashboard') ? 'bg-blue-50 text-blue-600 shadow-sm border border-blue-100/50' : 'text-gray-500 hover:bg-gray-50'"
         >
-          <i :class="['bi', item.icon, 'text-xl me-4']"></i>
+          <i :class="['bi', item.icon, 'text-lg me-4']"></i>
           {{ item.name }}
         </RouterLink>
       </nav>
 
-      <div class="p-5 border-t border-slate-100 shrink-0 space-y-3 bg-slate-50/50">
-        <button @click="handleChangeRoom" class="w-full flex items-center justify-center px-4 py-3.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-2xl transition-all shadow-sm active:scale-95">
-          <i class="bi bi-arrow-left-right me-2 text-slate-400"></i> สลับห้องเรียน
+      <div class="p-4 border-t border-gray-100 shrink-0 space-y-2 bg-gray-50">
+        <button @click="handleChangeRoom" class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-bold text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors shadow-sm">
+          <i class="bi bi-arrow-left-right me-2"></i> สลับห้องเรียน
         </button>
-        <button @click="logout" class="w-full flex items-center justify-center px-4 py-3.5 text-sm font-black text-white bg-rose-500 hover:bg-rose-600 rounded-2xl transition-all shadow-md shadow-rose-500/30 active:scale-95">
+        <button @click="logout" class="w-full flex items-center justify-center px-4 py-2.5 text-sm font-bold text-red-500 bg-white border border-red-100 hover:bg-red-50 rounded-xl transition-colors shadow-sm">
           <i class="bi bi-power me-2"></i> ออกจากระบบ
         </button>
       </div>
     </div>
 
-    <div class="flex flex-col flex-1 overflow-hidden relative z-10">
-      
-      <header class="flex-shrink-0 bg-transparent z-30 pt-4 px-4 md:px-8">
-        <div class="h-16 flex items-center justify-between bg-white/70 backdrop-blur-xl border border-slate-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)] rounded-[1.5rem] px-5">
-          
-          <div class="flex items-center gap-3">
+    <div class="flex flex-col flex-1 overflow-hidden relative">
+      <header class="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-100 z-30 sticky top-0 supports-[backdrop-filter]:bg-white/60 relative">
+        <div class="h-16 flex items-center justify-between px-4 md:px-6">
+          <div class="flex items-center">
             <button 
               @click="isSidebarOpen = true" 
-              class="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors active:scale-95"
+              class="md:hidden p-2 me-3 rounded-xl text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
             >
               <i class="bi bi-list text-2xl"></i>
             </button>
-            <div class="hidden md:flex items-center bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200/50 text-sm font-bold text-slate-600 tracking-wide">
-              <i class="bi bi-door-open-fill me-2 text-slate-400"></i> {{ authStore.currentRoomName || authStore.currentRoomId }}
+            
+            <div class="flex items-center text-sm font-bold text-gray-800 tracking-tight gap-1.5 md:gap-2">
+              <template v-if="authStore.currentRoomId">
+                
+                <button 
+                  @click="handleChangeRoom" 
+                  class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                  title="กลับหน้าเลือกห้อง"
+                >
+                  <i class="bi bi-house-door-fill text-lg"></i>
+                </button>
+                
+                <div class="relative flex items-center">
+                  <button 
+                    @click.stop="toggleDropdown('breadcrumbMenu')" 
+                    class="flex items-center justify-center w-6 h-6 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer relative z-40"
+                  >
+                    <i class="bi bi-chevron-right text-[10px] font-black"></i>
+                  </button>
+
+                  <transition name="fade-scale">
+                    <div v-if="activeDropdown === 'breadcrumbMenu'" class="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1.5 z-50">
+                      <p class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-50 mb-1">นำทางด่วน</p>
+                      <RouterLink 
+                        v-for="item in menuItems" 
+                        :key="item.path"
+                        :to="item.path"
+                        @click="closeDropdowns"
+                        class="flex items-center px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
+                        <i :class="['bi', item.icon, 'text-base me-3']"></i>
+                        {{ item.name }}
+                      </RouterLink>
+                    </div>
+                  </transition>
+                </div>
+                
+                <router-link 
+                  to="/dashboard" 
+                  class="px-2 py-1 rounded-md hover:bg-gray-100 transition-colors cursor-pointer truncate max-w-[120px] sm:max-w-[200px]"
+                  title="หน้าหลักห้องเรียน"
+                >
+                  {{ authStore.currentRoomName || authStore.currentRoomId }}
+                </router-link>
+                
+                <template v-if="currentSubMenuName">
+                  <i class="bi bi-chevron-right text-[10px] font-black text-gray-300"></i>
+                  <span class="text-blue-600 px-1">{{ currentSubMenuName }}</span>
+                </template>
+
+              </template>
+
+              <template v-else>
+                <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                  <i class="bi bi-house-door-fill text-lg"></i>
+                </div>
+                <i class="bi bi-chevron-right text-[10px] font-black text-gray-300 mx-1"></i>
+                <span>ระบบจัดการห้องเรียน</span>
+              </template>
+
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-             <button @click="handleChangeRoom" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm rounded-xl text-sm font-bold text-slate-600 transition-all active:scale-95">
-               <i class="bi bi-arrow-left-right text-slate-400"></i> สลับห้อง
-             </button>
+          <div class="relative">
+            <button 
+              @click.stop="toggleDropdown('headerSettings')"
+              class="flex items-center p-1.5 sm:pe-4 bg-white hover:bg-gray-50 border border-gray-100 rounded-full transition-all duration-300 shadow-sm hover:shadow group cursor-pointer focus:outline-none relative z-40"
+              :class="{'ring-2 ring-blue-500/20': activeDropdown === 'headerSettings'}"
+            >
+              <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-inner group-hover:scale-105 transition-transform duration-300">
+                {{ avatarChar }}
+              </div>
+              <div class="ms-3 hidden sm:block text-left">
+                <p class="text-sm font-bold text-gray-800 leading-none">{{ displayName }}</p>
+                <p class="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-1 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
+                  Online
+                </p>
+              </div>
+            </button>
+
+            <transition name="fade-scale">
+              <div v-if="activeDropdown === 'headerSettings'" class="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 origin-top-right">
+                <div class="px-4 py-3 mb-1 border-b border-gray-50 bg-gray-50/50">
+                  <p class="text-sm font-bold text-gray-800 truncate">{{ displayName }}</p>
+                  <p class="text-xs text-blue-500 font-bold uppercase truncate">{{ authStore.currentRole }}</p>
+                </div>
+                <button @click.stop="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-person-badge text-lg"></i> โปรไฟล์ของฉัน
+                </button>
+                <button @click.stop="goToProfileSettings" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-link-45deg text-lg"></i> จัดการผูกบัญชี
+                </button>
+                <button @click.stop="handleChangeRoom" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-arrow-left-right text-lg"></i> สลับห้องเรียน
+                </button>
+                <div class="h-px bg-gray-100 my-1"></div>
+                <button @click.stop="logout" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-3">
+                  <i class="bi bi-power text-lg"></i> ออกจากระบบ
+                </button>
+              </div>
+            </transition>
           </div>
         </div>
       </header>
 
-      <main class="flex-1 overflow-y-auto focus:outline-none scroll-smooth relative z-0">
-        <div class="p-4 md:p-8 pt-6">
-          <div class="max-w-7xl mx-auto">
+      <main class="flex-1 overflow-y-auto bg-[#f8fafc] focus:outline-none scroll-smooth relative z-0">
+        <div class="py-8">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
             <RouterView v-slot="{ Component, route }">
               <transition name="fade-slide" mode="out-in">
                 <div :key="route.path">
@@ -334,14 +459,24 @@ const goToProfileSettings = async () => {
   opacity: 0;
 }
 
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fade-up-enter-from,
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+}
+
 .fade-scale-enter-active,
 .fade-scale-leave-active {
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .fade-scale-enter-from,
 .fade-scale-leave-to {
   opacity: 0;
-  transform: scale(0.95) translateY(10px);
+  transform: scale(0.95) translateY(-10px);
 }
 
 ::-webkit-scrollbar {

@@ -27,14 +27,20 @@ const logout = () => {
   authStore.logout();
 };
 
-// 🌟 ฟีเจอร์ใหม่: ระบบจัดการบัญชี (Smart Link Accounts)
+// 🌟 ฟีเจอร์: ระบบจัดการบัญชี (อัปเกรดการสร้าง URL อัตโนมัติ ป้องกันปุ่มตาย)
 const goToProfileSettings = async () => {
   closeDropdown();
-  // อัปเดตข้อมูลล่าสุดก่อนแสดงผล
   await authStore.fetchProfile();
 
   const isDiscordLinked = !!authStore.discordId;
   const isGoogleLinked = !!authStore.googleId;
+
+  // 🚀 ประกอบ URL สำหรับ OAuth สดๆ จาก .env ที่มีอยู่แน่นอน
+  const discordScope = encodeURIComponent('identify email');
+  const discordUrl = `https://discord.com/api/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(import.meta.env.VITE_DISCORD_REDIRECT_URI)}&response_type=code&scope=${discordScope}`;
+
+  const googleScope = encodeURIComponent('openid email profile');
+  const googleUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(import.meta.env.VITE_GOOGLE_REDIRECT_URI)}&response_type=code&scope=${googleScope}`;
 
   Swal.fire({
     title: '<i class="bi bi-shield-lock-fill text-3xl text-slate-800"></i><br>จัดการบัญชีและการเชื่อมต่อ',
@@ -54,7 +60,7 @@ const goToProfileSettings = async () => {
               </p>
             </div>
           </div>
-          ${!isGoogleLinked ? `<a href="${import.meta.env.VITE_GOOGLE_AUTH_URL || '#'}" class="px-4 py-2 bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
+          ${!isGoogleLinked ? `<a href="${googleUrl}" class="px-4 py-2 bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
         </div>
 
         <div class="p-4 rounded-[1.5rem] border ${isDiscordLinked ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-200'} flex items-center justify-between">
@@ -69,7 +75,7 @@ const goToProfileSettings = async () => {
               </p>
             </div>
           </div>
-          ${!isDiscordLinked ? `<a href="${import.meta.env.VITE_DISCORD_AUTH_URL || '#'}" class="px-4 py-2 bg-white border border-slate-200 hover:border-[#5865F2] hover:text-[#5865F2] text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
+          ${!isDiscordLinked ? `<a href="${discordUrl}" class="px-4 py-2 bg-white border border-slate-200 hover:border-[#5865F2] hover:text-[#5865F2] text-xs font-bold rounded-xl transition-all shadow-sm">ผูกบัญชี</a>` : ''}
         </div>
       </div>
     `,
