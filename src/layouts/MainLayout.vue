@@ -111,9 +111,8 @@ const goToMyProfile = async () => {
   }
 };
 
-// 🌟 ฟีเจอร์ใหม่: คู่มือการผูกบัญชี (Sync Accounts)
 const goToProfileSettings = () => {
-  closeDropdown();
+  closeDropdowns(); // 🚨 แก้ตรงนี้แล้วครับ เติม 's' ให้ตรงกับไฟล์นี้
   Swal.fire({
     title: 'ตั้งค่าการผูกบัญชีกลาง',
     html: `
