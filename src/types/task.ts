@@ -1,6 +1,6 @@
 export interface Task {
   id: number;
-  room_id: string;
+  room_id: number; // ✨ แก้จาก string เป็น number
   task_name: string;
   task_detail: string;
   due_date: string;
@@ -26,7 +26,7 @@ export interface TaskUpdate {
 
 export interface DailyNote {
   id: number;
-  room_id: string;
+  room_id: number; // ✨ แก้จาก string เป็น number
   target_date: string;
   bring_items: string;
   announcement: string;

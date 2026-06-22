@@ -9,7 +9,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 // ถอด Mock Data ออก และดึงค่าจาก Store แทน
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -40,7 +40,7 @@ const handleSaveDefault = async () => {
   isSubmitting.value = true
   
   try {
-    await ScheduleService.saveDefault(currentServerId, {
+    await ScheduleService.saveDefault(currentRoomId, {
       ...defaultForm,
       user_name: currentUserName
     })
@@ -67,7 +67,7 @@ const handleSaveOverride = async () => {
   isSubmitting.value = true
   
   try {
-    await ScheduleService.saveOverride(currentServerId, {
+    await ScheduleService.saveOverride(currentRoomId, {
       ...(overrideForm as any),
       user_name: currentUserName
     })

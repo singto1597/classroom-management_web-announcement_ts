@@ -3,40 +3,40 @@ import type { Task, TaskCreate, TaskUpdate, DailyNote, DailyNoteCreate } from '@
 
 export const TaskService = {
   // --- Task API ---
-  async getAllTasks(serverId: string): Promise<Task[]> {
-    return await api.get(`/api/classroom/${serverId}/tasks`) as any[]
+  async getAllTasks(roomId: number): Promise<Task[]> {
+    return await api.get(`/api/classroom/${roomId}/tasks?target_type=room`) as any[]
   },
 
-  async getTaskById(serverId: string, taskId: number): Promise<Task> {
-    return await api.get(`/api/classroom/${serverId}/tasks/${taskId}`)
+  async getTaskById(roomId: number, taskId: number): Promise<Task> {
+    return await api.get(`/api/classroom/${roomId}/tasks/${taskId}?target_type=room`)
   },
 
-  async createTask(serverId: string, data: TaskCreate): Promise<void> {
-    await api.post(`/api/classroom/${serverId}/tasks`, data)
+  async createTask(roomId: number, data: TaskCreate): Promise<void> {
+    await api.post(`/api/classroom/${roomId}/tasks?target_type=room`, data)
   },
 
-  async updateTask(serverId: string, taskId: number, data: TaskUpdate): Promise<void> {
-    await api.put(`/api/classroom/${serverId}/tasks/${taskId}`, data)
+  async updateTask(roomId: number, taskId: number, data: TaskUpdate): Promise<void> {
+    await api.put(`/api/classroom/${roomId}/tasks/${taskId}?target_type=room`, data)
   },
 
-  async markDone(serverId: string, taskId: number, userName: string): Promise<void> {
-    await api.patch(`/api/classroom/${serverId}/tasks/${taskId}/done`, { user_name: userName })
+  async markDone(roomId: number, taskId: number, userName: string): Promise<void> {
+    await api.patch(`/api/classroom/${roomId}/tasks/${taskId}/done?target_type=room`, { user_name: userName })
   },
 
-  async markPending(serverId: string, taskId: number, userName: string): Promise<void> {
-    await api.patch(`/api/classroom/${serverId}/tasks/${taskId}/restore`, { user_name: userName })
+  async markPending(roomId: number, taskId: number, userName: string): Promise<void> {
+    await api.patch(`/api/classroom/${roomId}/tasks/${taskId}/restore?target_type=room`, { user_name: userName })
   },
 
-  async deleteTask(serverId: string, taskId: number, userName: string): Promise<void> {
-    await api.delete(`/api/classroom/${serverId}/tasks/${taskId}`, { data: { user_name: userName } })
+  async deleteTask(roomId: number, taskId: number, userName: string): Promise<void> {
+    await api.delete(`/api/classroom/${roomId}/tasks/${taskId}?target_type=room`, { data: { user_name: userName } })
   },
 
   // --- Daily Note API ---
-  async getDailyNotes(serverId: string): Promise<DailyNote[]> {
-    return await api.get(`/api/classroom/${serverId}/notes`) as any[]
+  async getDailyNotes(roomId: number): Promise<DailyNote[]> {
+    return await api.get(`/api/classroom/${roomId}/notes?target_type=room`) as any[]
   },
 
-  async createDailyNote(serverId: string, data: DailyNoteCreate): Promise<void> {
-    await api.post(`/api/classroom/${serverId}/notes`, data)
+  async createDailyNote(roomId: number, data: DailyNoteCreate): Promise<void> {
+    await api.post(`/api/classroom/${roomId}/notes?target_type=room`, data)
   }
 }

@@ -31,7 +31,7 @@ export interface Student {
   address_district: string | null
   address_province: string | null
   address_post_code: string | null
-  status: 'active' | 'inactive'
+  status: 'active' | 'inactive' | 'pending'
   created_at: string
   updated_at: string
   deleted_at: string | null

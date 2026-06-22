@@ -1,243 +1,265 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { StudentService } from '@/services/student'
-import type { Student } from '@/types/student'
-import Swal from 'sweetalert2'
+import { ref, onMounted, computed } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import { StudentService } from '@/services/student';
+import type { Student } from '@/types/student';
+import Swal from 'sweetalert2';
 
-const authStore = useAuthStore()
+const authStore = useAuthStore();
+const currentRoomId = authStore.currentRoomId!;
+const currentUserName = authStore.currentUserName!;
+const isAdmin = computed(() => authStore.isAdmin);
 
-// --- ถอด Mock Data แล้วใช้จาก Store ---
-const currentServerId = authStore.currentRoomId!
-const currentUserName = authStore.currentUserName!
-const isAdmin = computed(() => authStore.isAdmin)
+// --- States ---
+const currentTab = ref<'active' | 'pending'>('active');
+const students = ref<Student[]>([]);
+const pendingStudents = ref<any[]>([]); // สำหรับเก็บรายชื่อคนรออนุมัติ
+const isLoading = ref(true);
+const searchQuery = ref('');
+const showInactive = ref(false);
 
-// --- State ---
-const students = ref<Student[]>([])
-const isLoading = ref(true)
-const searchQuery = ref('')
-const showInactive = ref(false)
+// --- Fetch Data ---
+const fetchData = async () => {
+  isLoading.value = true;
+  try {
+    if (currentTab.value === 'active') {
+      const data = await StudentService.getStudents(currentRoomId);
+      students.value = Array.isArray(data) ? data : [];
+    } else if (isAdmin.value) {
+      // โหลดเฉพาะแท็บ pending และต้องเป็น Admin/Teacher
+      pendingStudents.value = await StudentService.getPendingRequests(currentRoomId);
+    }
+  } catch (error: any) {
+    Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: error.response?.data?.detail || 'ไม่สามารถโหลดข้อมูลได้' });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const switchTab = (tab: 'active' | 'pending') => {
+  currentTab.value = tab;
+  fetchData();
+};
+
+onMounted(() => {
+  fetchData();
+});
 
 // --- Computed ---
 const filteredStudents = computed(() => {
-  // 1. กันไว้ก่อน ถ้า students.value ยังเป็น null/undefined/ว่าง
   if (!students.value || students.value.length === 0) return [];
-
+  
   return students.value.filter((student) => {
-    // 2. Filter by status
-    if (!showInactive.value && student.status === 'inactive') {
-      return false
-    }
-
-    // 3. Filter by search query
-    const query = searchQuery.value.toLowerCase().trim()
-    if (!query) return true
-
-    // ใช้ Optional Chaining (?.) และ Nullish Coalescing (|| '') เพื่อกัน Error
-    const fullName = `${student.first_name || ''} ${student.last_name || ''}`.toLowerCase()
-    const studentNo = student.student_no?.toString() || ''
-    const studentId = student.student_id?.toString().toLowerCase() || ''
-    const nickname = student.nickname?.toLowerCase() || ''
+    // Filter by status
+    if (!showInactive.value && student.status === 'inactive') return false;
+    
+    // Filter by search query
+    const query = searchQuery.value.toLowerCase().trim();
+    if (!query) return true;
+    
+    // ดึงฟังก์ชันค้นหาจากโค้ดเก่ากลับมา (ค้นหาชื่อเล่น และ รหัสนักเรียนได้)
+    const fullName = `${student.first_name || ''} ${student.last_name || ''}`.toLowerCase();
+    const studentNo = student.student_no?.toString() || '';
+    const studentId = student.student_id?.toString().toLowerCase() || '';
+    const nickname = student.nickname?.toLowerCase() || '';
 
     return (
       fullName.includes(query) ||
       studentNo.includes(query) ||
       studentId.includes(query) ||
       nickname.includes(query)
-    )
-  })
-})
+    );
+  });
+});
 
-// --- Methods ---
-const fetchStudents = async () => {
-  isLoading.value = true
-  try {
-    const data = await StudentService.getStudents(currentServerId)
-    console.log("ข้อมูลที่ได้รับจาก API:", data)
-    students.value = Array.isArray(data) ? data : []
-  } catch (error: any) {
-    console.error('Fetch students error:', error)
-    students.value = []
-    Swal.fire({
-      icon: 'error',
-      title: 'เกิดข้อผิดพลาด',
-      text: error.response?.data?.detail || 'ไม่สามารถโหลดข้อมูลนักเรียนได้'
-    })
-  } finally {
-    isLoading.value = false
-  }
-}
-
+// --- Actions (Active Tab) ---
 const confirmDelete = async (student: Student) => {
-  // Guard ดักไว้ฝั่ง Script ด้วย
   if (!isAdmin.value) {
-    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่ลบข้อมูลได้', 'error')
+    return Swal.fire('ไม่มีสิทธิ์', 'เฉพาะแอดมินเท่านั้นที่ลบข้อมูลได้', 'error');
   }
 
   const result = await Swal.fire({
     title: 'ยืนยันการลบ?',
-    text: `คุณต้องการลบ ${student.first_name} ${student.last_name} (เลขที่ ${student.student_no}) ใช่หรือไม่?`,
+    text: `ลบ ${student.first_name} (เลขที่ ${student.student_no}) ใช่หรือไม่?`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'ใช่, ลบเลย!',
+    confirmButtonText: 'ลบเลย',
     cancelButtonText: 'ยกเลิก'
-  })
+  });
 
   if (result.isConfirmed) {
     try {
-      await StudentService.deleteStudent(currentServerId, student.student_no, currentUserName)
-      await Swal.fire('ลบสำเร็จ!', 'ข้อมูลนักเรียนถูกลบออกแล้ว', 'success')
-      fetchStudents()
+      await StudentService.deleteStudent(currentRoomId, student.student_no, currentUserName);
+      Swal.fire('ลบสำเร็จ!', '', 'success');
+      fetchData();
     } catch (error: any) {
-      Swal.fire({
-        icon: 'error',
-        title: 'ลบไม่สำเร็จ',
-        text: error.response?.data?.detail || 'เกิดข้อผิดพลาดในการลบข้อมูล'
-      })
+      Swal.fire('ลบไม่สำเร็จ', error.response?.data?.detail, 'error');
     }
   }
-}
+};
 
-onMounted(() => {
-  fetchStudents()
-})
+// --- Actions (Pending Tab) ---
+const approveJoin = async (studentNo: number) => {
+  try {
+    await StudentService.approveStudent(currentRoomId, studentNo);
+    await fetchData(); // รีเฟรชตาราง
+    Swal.fire({ title: 'อนุมัติสำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+  } catch (error: any) {
+    Swal.fire('ข้อผิดพลาด', error.response?.data?.detail, 'error');
+  }
+};
+
+const rejectJoin = async (studentNo: number) => {
+  const result = await Swal.fire({
+    title: 'ปฏิเสธคำขอ?',
+    text: 'ข้อมูลคำขอนี้จะถูกลบออกจากระบบทันที',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    confirmButtonText: 'ปฏิเสธ',
+    cancelButtonText: 'ยกเลิก'
+  });
+  if (result.isConfirmed) {
+    try {
+      await StudentService.rejectStudent(currentRoomId, studentNo);
+      await fetchData();
+      Swal.fire({ title: 'ปฏิเสธคำขอแล้ว', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (error: any) {
+      Swal.fire('ข้อผิดพลาด', error.response?.data?.detail, 'error');
+    }
+  }
+};
 </script>
 
 <template>
   <div class="p-4 sm:p-6 md:p-8">
     
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-      <h1 class="text-xl md:text-2xl font-bold text-gray-800">
-        <i class="bi bi-people-fill me-2"></i>รายชื่อนักเรียน
+      <h1 class="text-2xl font-black text-slate-800 tracking-tight">
+        <i class="bi bi-people-fill me-2 text-blue-600"></i>จัดการนักเรียน
       </h1>
-      <RouterLink
-        v-if="isAdmin"
-        to="/students/add"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-sm transition-all flex items-center justify-center w-full sm:w-auto"
-      >
+      <RouterLink v-if="isAdmin" to="/students/add" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center">
         <i class="bi bi-person-plus-fill me-2"></i>เพิ่มนักเรียน
       </RouterLink>
     </div>
 
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
+    <div v-if="isAdmin" class="border-b border-slate-200 mb-6 flex gap-6 px-2">
+      <button 
+        @click="switchTab('active')" 
+        class="py-3 px-1 font-bold text-sm transition-all border-b-2"
+        :class="currentTab === 'active' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
+      >
+        นักเรียนปัจจุบัน
+      </button>
+      <button 
+        @click="switchTab('pending')" 
+        class="py-3 px-1 font-bold text-sm transition-all border-b-2 flex items-center gap-2"
+        :class="currentTab === 'pending' ? 'border-amber-500 text-amber-600' : 'border-transparent text-slate-500 hover:text-slate-700'"
+      >
+        รอการอนุมัติ 
+        <span v-if="currentTab !== 'pending' && pendingStudents.length > 0" class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full">{{ pendingStudents.length }}</span>
+      </button>
+    </div>
+
+    <div v-if="currentTab === 'active'" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
       <div class="relative w-full lg:flex-1">
-        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-          <i class="bi bi-search"></i>
-        </span>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="ค้นหาชื่อ, เลขที่, หรือชื่อเล่น..."
-          class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-        />
+        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><i class="bi bi-search"></i></span>
+        <input v-model="searchQuery" type="text" placeholder="ค้นหาชื่อ, เลขที่, หรือชื่อเล่น..." class="w-full pl-11 pr-4 py-2.5 text-sm font-medium border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" />
       </div>
-      
-      <div class="flex items-center gap-2 w-full lg:w-auto select-none">
+      <div class="flex items-center gap-2 select-none">
         <label class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" v-model="showInactive" class="sr-only peer">
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-          <span class="ms-3 text-sm font-medium text-gray-700">แสดงนักเรียนที่ออกแล้ว (Inactive)</span>
+          <div class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+          <span class="ms-3 text-sm font-bold text-slate-600">แสดงนักเรียน Inactive</span>
         </label>
       </div>
     </div>
 
-    <div v-if="isLoading" class="flex justify-center items-center py-20">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"
-      ></div>
-      <span class="ms-3 text-gray-600">กำลังโหลดข้อมูล...</span>
+    <div v-if="isLoading" class="flex justify-center py-20">
+      <div class="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-blue-600"></div>
     </div>
 
-    <div v-else class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-      <div class="overflow-x-auto w-full">
+    <div v-else-if="currentTab === 'active'" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
+      <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[700px]">
           <thead>
-            <tr class="bg-gray-50 text-gray-600 uppercase text-xs md:text-sm leading-normal">
-              <th class="py-3 px-4 font-semibold text-center w-20">เลขที่</th>
-              <th class="py-3 px-4 font-semibold">ชื่อ-นามสกุล</th>
-              <th class="py-3 px-4 font-semibold">ชื่อเล่น</th>
-              <th class="py-3 px-4 font-semibold">บทบาท</th>
-              <th class="py-3 px-4 font-semibold text-center">สถานะ</th>
-              <th class="py-3 px-4 font-semibold text-center">จัดการ</th>
+            <tr class="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider">
+              <th class="py-4 px-5 font-black text-center w-20">เลขที่</th>
+              <th class="py-4 px-5 font-black">ชื่อ-นามสกุล</th>
+              <th class="py-4 px-5 font-black">ชื่อเล่น</th>
+              <th class="py-4 px-5 font-black">บทบาท</th>
+              <th class="py-4 px-5 font-black text-center">สถานะ</th>
+              <th class="py-4 px-5 font-black text-center">จัดการ</th>
             </tr>
           </thead>
-          <tbody class="text-gray-600 text-xs md:text-sm font-light">
-            <tr
-              v-for="student in filteredStudents"
-              :key="student.id"
-              class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-              :class="{ 'opacity-60 grayscale-[0.5]': student.status === 'inactive' }"
-            >
-              <td class="py-3 px-4 text-center font-medium">
-                {{ student.student_no }}
+          <tbody class="text-slate-700 text-sm font-medium">
+            <tr v-for="student in filteredStudents" :key="student.id" class="border-b border-slate-50 hover:bg-slate-50 transition-colors" :class="{ 'opacity-50 grayscale-[0.5]': student.status === 'inactive' }">
+              <td class="py-4 px-5 text-center font-bold text-slate-800">{{ student.student_no }}</td>
+              <td class="py-4 px-5">{{ student.prefix || '' }}{{ student.first_name }} {{ student.last_name }}</td>
+              <td class="py-4 px-5">{{ student.nickname || '-' }}</td>
+              <td class="py-4 px-5">
+                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase" :class="student.class_role === 'student' ? 'bg-slate-100 text-slate-600' : 'bg-indigo-50 text-indigo-600 border border-indigo-100'">{{ student.class_role }}</span>
               </td>
-              <td class="py-3 px-4 font-normal text-gray-800">
-                {{ student.prefix }}{{ student.first_name }} {{ student.last_name }}
+              <td class="py-4 px-5 text-center">
+                <span v-if="student.status === 'active'" class="bg-emerald-50 text-emerald-600 py-1 px-3 rounded-full text-[10px] font-bold border border-emerald-100">Active</span>
+                <span v-else-if="student.status === 'pending'" class="bg-amber-50 text-amber-600 py-1 px-3 rounded-full text-[10px] font-bold border border-amber-100">รออนุมัติ</span>
+                <span v-else class="bg-rose-50 text-rose-600 py-1 px-3 rounded-full text-[10px] font-bold border border-rose-100">Inactive</span>
               </td>
-              <td class="py-3 px-4">
-                {{ student.nickname || '-' }}
-              </td>
-              <td class="py-3 px-4">
-                <span
-                  class="px-2 py-1 rounded-md text-[10px] md:text-xs font-medium"
-                  :class="student.class_role === 'student' ? 'bg-gray-100' : 'bg-purple-100 text-purple-700'"
-                >
-                  {{ student.class_role }}
-                </span>
-              </td>
-              <td class="py-3 px-4 text-center">
-                <span
-                  v-if="student.status === 'active'"
-                  class="bg-green-100 text-green-700 py-1 px-2.5 rounded-full text-[10px] md:text-xs font-bold"
-                >
-                  Active
-                </span>
-                <span
-                  v-else
-                  class="bg-red-100 text-red-700 py-1 px-2.5 rounded-full text-[10px] md:text-xs font-bold"
-                >
-                  Inactive
-                </span>
-              </td>
-              <td class="py-3 px-4 text-center">
+              <td class="py-4 px-5 text-center">
                 <div class="flex items-center justify-center gap-2">
-                  <RouterLink
-                    :to="`/students/${student.student_no}`"
-                    class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center justify-center min-w-[32px] min-h-[32px]"
-                    title="ดูโปรไฟล์"
-                  >
-                    <i class="bi bi-eye"></i>
-                  </RouterLink>
+                  <RouterLink :to="`/students/${student.student_no}`" class="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-colors"><i class="bi bi-eye-fill"></i></RouterLink>
                   <template v-if="isAdmin">
-                    <RouterLink
-                      :to="`/students/${student.student_no}/edit`"
-                      class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors flex items-center justify-center min-w-[32px] min-h-[32px]"
-                      title="แก้ไข"
-                    >
-                      <i class="bi bi-pencil"></i>
-                    </RouterLink>
-                    <button
-                      @click="confirmDelete(student)"
-                      class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center min-w-[32px] min-h-[32px]"
-                      title="ลบ"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
+                    <RouterLink :to="`/students/${student.student_no}/edit`" class="w-8 h-8 flex items-center justify-center bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-500 hover:text-white transition-colors"><i class="bi bi-pencil-fill"></i></RouterLink>
+                    <button @click="confirmDelete(student)" class="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-colors"><i class="bi bi-trash-fill"></i></button>
                   </template>
                 </div>
               </td>
             </tr>
-            <tr v-if="filteredStudents.length === 0">
-              <td colspan="6" class="py-10 text-center text-gray-400 italic">
-                ไม่พบข้อมูลนักเรียนที่ตรงตามเงื่อนไข
+            <tr v-if="filteredStudents.length === 0"><td colspan="6" class="py-12 text-center text-slate-400 font-medium">ไม่พบข้อมูลนักเรียน</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div v-else-if="currentTab === 'pending'" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-amber-100 ring-1 ring-amber-500/10">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[700px]">
+          <thead>
+            <tr class="bg-amber-50/50 text-slate-500 uppercase text-xs tracking-wider">
+              <th class="py-4 px-5 font-black text-center w-20">เลขที่</th>
+              <th class="py-4 px-5 font-black">ชื่อ-นามสกุล</th>
+              <th class="py-4 px-5 font-black">วันที่ขอเข้า</th>
+              <th class="py-4 px-5 font-black text-center w-40">อนุมัติคำขอ</th>
+            </tr>
+          </thead>
+          <tbody class="text-slate-700 text-sm font-medium">
+            <tr v-for="req in pendingStudents" :key="req.student_no" class="border-b border-slate-50 hover:bg-amber-50/30 transition-colors">
+              <td class="py-4 px-5 text-center font-black text-slate-800">{{ req.student_no }}</td>
+              <td class="py-4 px-5">{{ req.first_name }} {{ req.last_name }}</td>
+              <td class="py-4 px-5 text-xs text-slate-500">{{ new Date(req.created_at).toLocaleString('th-TH') }}</td>
+              <td class="py-4 px-5 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <button @click="approveJoin(req.student_no)" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white rounded-lg text-xs font-bold transition-all border border-emerald-100 hover:border-emerald-500">
+                    <i class="bi bi-check-lg"></i> ยอมรับ
+                  </button>
+                  <button @click="rejectJoin(req.student_no)" class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-500 hover:text-white rounded-lg text-xs font-bold transition-all border border-rose-100 hover:border-rose-500">
+                    <i class="bi bi-x-lg"></i> ปฏิเสธ
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="pendingStudents.length === 0">
+              <td colspan="4" class="py-16 text-center">
+                <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl"><i class="bi bi-check2-all"></i></div>
+                <p class="text-slate-500 font-medium">ไม่มีคำขอเข้าร่วมที่รอการอนุมัติ</p>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
   </div>
 </template>
 

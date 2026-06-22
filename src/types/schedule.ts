@@ -1,6 +1,6 @@
 export interface DefaultSchedule {
   id?: number;
-  room_id: string;
+  room_id: number; // ✨ แก้จาก string เป็น number
   day_of_week: string;
   attire: string;
   subjects: string;
@@ -9,7 +9,7 @@ export interface DefaultSchedule {
 
 export interface ScheduleOverride {
   id?: number;
-  room_id: string;
+  room_id: number; // ✨ แก้จาก string เป็น number
   target_date: string;
   new_attire: string;
   note: string;

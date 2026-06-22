@@ -5,37 +5,37 @@ export const StudentService = {
   /**
    * ดึงรายชื่อนักเรียนทั้งหมดในห้อง
    */
-  async getStudents(serverId: string): Promise<Student[]> {
-    return await api.get(`/api/classroom/${serverId}/students`)
+  async getStudents(roomId: number): Promise<Student[]> {
+    return await api.get(`/api/classroom/${roomId}/students?target_type=room`)
   },
 
   /**
    * ดึงข้อมูลนักเรียนรายคน (ตามเลขที่)
    */
-  async getStudentByNo(serverId: string, studentNo: string | number): Promise<Student> {
-    // เปลี่ยนจาก API /search มาเป็น API เฉพาะที่เราสร้างไว้
-    return await api.get(`/api/classroom/${serverId}/students/profile/${studentNo}`) as Student
+  async getStudentByNo(roomId: number, studentNo: string | number): Promise<Student> {
+    return await api.get(`/api/classroom/${roomId}/students/profile/${studentNo}?target_type=room`) as Student
   },
 
-  async getMyProfile(serverId: string) { 
-    return await api.get('/api/classroom/' + serverId + '/students/me');
+  async getMyProfile(roomId: number) { 
+    return await api.get(`/api/classroom/${roomId}/students/me?target_type=room`);
   },
+
   /**
    * อัปเดตข้อมูลนักเรียน
    */
   async updateStudent(
-    serverId: string,
+    roomId: number,
     studentNo: string | number,
     payload: Partial<Student>
   ): Promise<void> {
-    await api.patch(`/api/classroom/${serverId}/students/${studentNo}`, payload)
+    await api.patch(`/api/classroom/${roomId}/students/${studentNo}?target_type=room`, payload)
   },
 
   /**
    * ลบนักเรียน
    */
-  async deleteStudent(serverId: string, studentNo: number, userName: string): Promise<void> {
-    await api.delete(`/api/classroom/${serverId}/students/${studentNo}`, {
+  async deleteStudent(roomId: number, studentNo: number, userName: string): Promise<void> {
+    await api.delete(`/api/classroom/${roomId}/students/${studentNo}?target_type=room`, {
       data: { user_name: userName }
     })
   },
@@ -44,12 +44,12 @@ export const StudentService = {
    * อัปเดตสถานะนักเรียน (เช่น active, inactive)
    */
   async updateStatus(
-    serverId: string,
+    roomId: number,
     studentNo: number,
     status: string,
     userName: string
   ): Promise<void> {
-    await api.patch(`/api/classroom/${serverId}/students/${studentNo}/status`, {
+    await api.patch(`/api/classroom/${roomId}/students/${studentNo}/status?target_type=room`, {
       status,
       user_name: userName
     })
@@ -58,22 +58,32 @@ export const StudentService = {
   /**
    * เพิ่มนักเรียน (คนเดียว)
    */
-  async addStudent(serverId: string, payload: any): Promise<void> {
-    await api.post(`/api/classroom/${serverId}/students`, payload)
+  async addStudent(roomId: number, payload: any): Promise<void> {
+    await api.post(`/api/classroom/${roomId}/students?target_type=room`, payload)
   },
 
   /**
    * เพิ่มนักเรียน (Bulk)
    */
   async bulkAddStudents(
-    serverId: string,
+    roomId: number,
     students: any[],
     userName: string
   ): Promise<void> {
-    await api.post(`/api/classroom/${serverId}/students/bulk`, {
+    await api.post(`/api/classroom/${roomId}/students/bulk?target_type=room`, {
       students,
       user_name: userName
     })
+  },
+
+  async getPendingRequests(roomId: number): Promise<any[]> {
+    return await api.get(`/api/classroom/${roomId}/requests`);
+  },
+  async approveStudent(roomId: number, studentNo: number): Promise<any> {
+    return await api.put(`/api/classroom/${roomId}/requests/${studentNo}/approve`);
+  },
+  async rejectStudent(roomId: number, studentNo: number): Promise<any> {
+    return await api.delete(`/api/classroom/${roomId}/requests/${studentNo}/reject`);
   }
 }
 
