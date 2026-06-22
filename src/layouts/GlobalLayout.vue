@@ -8,8 +8,9 @@ const authStore = useAuthStore();
 const router = useRouter();
 const activeDropdown = ref(false);
 
+// 🚨 บังคับดึงข้อมูลให้เป็นปัจจุบันที่สุดเสมอ ป้องกันข้อมูลผี
 onMounted(async () => {
-  if (authStore.isAuthenticated && (!authStore.firstName || authStore.firstName === '')) {
+  if (authStore.isAuthenticated) {
     await authStore.fetchProfile();
   }
 });
@@ -27,7 +28,6 @@ const logout = () => {
   authStore.logout();
 };
 
-// 🌟 ฟีเจอร์: ระบบจัดการบัญชี (อัปเกรดการสร้าง URL อัตโนมัติ ป้องกันปุ่มตาย)
 const goToProfileSettings = async () => {
   closeDropdown();
   await authStore.fetchProfile();
@@ -35,7 +35,6 @@ const goToProfileSettings = async () => {
   const isDiscordLinked = !!authStore.discordId;
   const isGoogleLinked = !!authStore.googleId;
 
-  // 🚀 ประกอบ URL สำหรับ OAuth สดๆ จาก .env ที่มีอยู่แน่นอน
   const discordScope = encodeURIComponent('identify email');
   const discordUrl = `https://discord.com/api/oauth2/authorize?client_id=${import.meta.env.VITE_DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(import.meta.env.VITE_DISCORD_REDIRECT_URI)}&response_type=code&scope=${discordScope}`;
 

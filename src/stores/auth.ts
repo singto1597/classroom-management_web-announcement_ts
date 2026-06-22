@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import router from '@/router';
+import api from '@/services/api'; // 🚨 ใช้ API ตัวเก่งของเราแทน fetch ธรรมดา
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
   const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
-  // 🌟 State สำหรับเก็บข้อมูลโปรไฟล์และสถานะการผูกบัญชี
   const firstName = ref<string | null>(localStorage.getItem('user_first_name'));
   const lastName = ref<string | null>(localStorage.getItem('user_last_name'));
   const email = ref<string | null>(localStorage.getItem('user_email'));
@@ -22,8 +22,9 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value);
   const isAdmin = computed(() => currentRole.value !== 'student' && currentRole.value !== null);
 
+  // ✨ จัดการชื่อให้ฉลาดขึ้น ถ้ามีคำแปลกปลอมหลุดมา ให้ใช้คำสำรอง
   const currentUserName = computed(() => {
-    const first = firstName.value || '';
+    const first = firstName.value && firstName.value !== 'ไม่ระบุชื่อ' ? firstName.value : '';
     const last = lastName.value || '';
     const full = `${first} ${last}`.trim();
     return full || 'ผู้ใช้งานระบบ';
@@ -32,26 +33,25 @@ export const useAuthStore = defineStore('auth', () => {
   const fetchProfile = async () => {
     if (!token.value) return;
     try {
-      const response = await fetch(`/api/auth/me`, {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token.value}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch profile');
-
-      const data = await response.json();
+      // 🚨 ยิง API ผ่าน Axios Instance ที่เรา Set ค่าไว้สมบูรณ์แล้ว
+      const data: any = await api.get(`/api/auth/me`);
       
-      firstName.value = data.first_name || '';
+      // ล้างข้อมูลขยะ (ถ้าระบบส่งคำแปลกๆ มาให้เปลี่ยนเป็นว่างเปล่า)
+      const validFirstName = data.first_name !== 'ไม่ระบุชื่อ' ? data.first_name : '';
+      
+      firstName.value = validFirstName || '';
       lastName.value = data.last_name || '';
       email.value = data.email || '';
       discordId.value = data.discord_id ? String(data.discord_id) : null;
       googleId.value = data.google_id ? String(data.google_id) : null;
       
-      localStorage.setItem('user_first_name', firstName.value!);
-      localStorage.setItem('user_last_name', lastName.value!);
+      // บันทึกลง LocalStorage
+      if (firstName.value) localStorage.setItem('user_first_name', firstName.value);
+      else localStorage.removeItem('user_first_name');
+
+      if (lastName.value) localStorage.setItem('user_last_name', lastName.value);
+      else localStorage.removeItem('user_last_name');
+
       if (email.value) localStorage.setItem('user_email', email.value);
       if (discordId.value) localStorage.setItem('user_discord_id', discordId.value);
       if (googleId.value) localStorage.setItem('user_google_id', googleId.value);
@@ -110,13 +110,13 @@ export const useAuthStore = defineStore('auth', () => {
     discordId.value = null;
     googleId.value = null;
     clearRoom();
-    localStorage.clear();
+    localStorage.clear(); // ระเบิดข้อมูลทิ้งให้หมดเวลา Logout
     router.push('/login');
   };
 
   return {
     token, userId, firstName, lastName, currentUserName,
-    email, discordId, googleId, // 🌟 Export สถานะการผูกบัญชี
+    email, discordId, googleId,
     currentRoomId, currentRoomName, currentRoomCode, currentRole,
     isAuthenticated, isAdmin,
     setToken, setUserId, setRoom, clearRoom, logout, fetchProfile

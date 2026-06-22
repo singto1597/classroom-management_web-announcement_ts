@@ -12,24 +12,20 @@ const route = useRoute();
 const isSidebarOpen = ref(false);
 const activeDropdown = ref<string | null>(null);
 
-// ✨ โหลดข้อมูลโปรไฟล์ (และสถานะการผูกบัญชี) ถ้ายังไม่มี
+// ✨ โหลดข้อมูลโปรไฟล์ (บังคับดึงเสมอ เพื่อให้ข้อมูลสดใหม่ตลอดเวลา)
 onMounted(async () => {
-  if (authStore.isAuthenticated && (!authStore.firstName || authStore.firstName === '')) {
+  if (authStore.isAuthenticated) {
     await authStore.fetchProfile();
   }
 });
 
-// ✨ ผสมชื่อและนามสกุลให้สวยงาม
-const displayName = computed(() => {
-  const first = authStore.firstName || '';
-  const last = authStore.lastName || '';
-  const full = `${first} ${last}`.trim();
-  return full || 'ผู้ใช้งานระบบ';
-});
+// ✨ ระบบชื่อใหม่ ดึงจาก authStore ที่จัดการแล้ว 100%
+const displayName = computed(() => authStore.currentUserName);
 
 // ✨ ดึงตัวอักษรตัวแรกของชื่อมาทำเป็นรูปโปรไฟล์
 const avatarChar = computed(() => {
-  return authStore.firstName ? authStore.firstName.charAt(0).toUpperCase() : 'U';
+  return authStore.firstName && authStore.firstName !== 'ไม่ระบุชื่อ' 
+    ? authStore.firstName.charAt(0).toUpperCase() : 'U';
 });
 
 const toggleDropdown = (dropdownName: string) => {
@@ -106,8 +102,9 @@ const logout = () => {
 
 // 🌟 ระบบจัดการบัญชี (Smart Link Accounts)
 const goToProfileSettings = async () => {
-  closeDropdowns();
+  closeDropdowns(); // 🚨 แก้บัคเรียกฟังก์ชันผิดชื่อ
   
+  // โหลดสถานะล่าสุดจาก Backend ก่อนเปิดหน้าต่าง
   Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
   await authStore.fetchProfile();
   Swal.close();
@@ -229,13 +226,10 @@ const goToProfileSettings = async () => {
             <transition name="fade-up">
               <div v-if="activeDropdown === 'sidebarSettings'" class="absolute bottom-full left-4 mb-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 transform origin-bottom-left">
                 <div class="px-4 py-2 mb-1 border-b border-gray-50">
-                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">จัดการบัญชี</p>
+                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">การจัดการ</p>
                 </div>
                 <button @click.stop="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-person-badge text-lg"></i> โปรไฟล์ของฉัน
-                </button>
-                <button @click.stop="showAccountInfo" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
-                  <i class="bi bi-info-circle text-lg"></i> ข้อมูลระบบ
                 </button>
                 <button @click.stop="goToProfileSettings" class="w-full text-left px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-3">
                   <i class="bi bi-link-45deg text-lg"></i> จัดการผูกบัญชี
@@ -437,6 +431,7 @@ const goToProfileSettings = async () => {
 </template>
 
 <style scoped>
+/* 🪄 แอนิเมชันสำหรับ Router View */
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -450,6 +445,7 @@ const goToProfileSettings = async () => {
   transform: translateY(-15px) scale(0.99);
 }
 
+/* 🪄 แอนิเมชันทั่วไป */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -459,6 +455,7 @@ const goToProfileSettings = async () => {
   opacity: 0;
 }
 
+/* แอนิเมชันสำหรับเมนู Dropdown แถบ Sidebar ล่าง */
 .fade-up-enter-active,
 .fade-up-leave-active {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -469,6 +466,7 @@ const goToProfileSettings = async () => {
   transform: translateY(10px) scale(0.95);
 }
 
+/* แอนิเมชันสำหรับเมนู Dropdown มุมขวาบน / Breadcrumb */
 .fade-scale-enter-active,
 .fade-scale-leave-active {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
