@@ -110,6 +110,50 @@ const goToMyProfile = async () => {
     });
   }
 };
+
+// 🌟 ฟีเจอร์ใหม่: คู่มือการผูกบัญชี (Sync Accounts)
+const goToProfileSettings = () => {
+  closeDropdown();
+  Swal.fire({
+    title: 'ตั้งค่าการผูกบัญชีกลาง',
+    html: `
+      <div class="text-left mt-4 space-y-4">
+        <p class="text-sm text-slate-600 font-medium">จัดการการเชื่อมต่อแพลตฟอร์มต่างๆ เพื่อรวมข้อมูลห้องเรียนของคุณให้เป็นหนึ่งเดียว</p>
+        
+        <div class="bg-[#5865F2]/5 border border-[#5865F2]/20 p-5 rounded-[1.5rem] relative overflow-hidden group">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-[#5865F2]/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4"></div>
+          <h4 class="font-black text-[#5865F2] flex items-center gap-2 mb-3 text-lg">
+            <i class="bi bi-discord text-2xl"></i> เชื่อมต่อ Discord
+          </h4>
+          <p class="text-sm text-slate-700 font-medium mb-4 leading-relaxed">
+            เข้าไปที่เซิร์ฟเวอร์ Discord ของห้องเรียน<br>
+            เลือกช่องแชท <b class="text-slate-900">#bot-commands</b><br>
+            พิมพ์คำสั่ง <span class="bg-white px-2.5 py-1 rounded-lg text-[#5865F2] font-mono font-bold shadow-sm border border-slate-100">/sync_me</span> แล้วระบุเลขที่ของคุณ
+          </p>
+          <div class="text-xs text-emerald-700 font-bold bg-emerald-100/50 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200/50">
+            <i class="bi bi-check-circle-fill"></i> ระบบจะดึงข้อมูลมารวมร่างกันอัตโนมัติ!
+          </div>
+        </div>
+
+        <div class="bg-rose-50/50 border border-rose-100 p-5 rounded-[1.5rem]">
+          <h4 class="font-black text-rose-600 flex items-center gap-2 mb-2 text-lg">
+            <i class="bi bi-google text-xl"></i> เชื่อมต่อ Google
+          </h4>
+          <p class="text-sm text-slate-600 font-medium leading-relaxed">
+            ระบบทำการ <b class="text-slate-800">ผสานบัญชีอัตโนมัติ (Auto-Merge)</b> ให้เรียบร้อยแล้ว หากคุณใช้อีเมล Google ตรงกับอีเมลในระบบ
+          </p>
+        </div>
+      </div>
+    `,
+    icon: 'info',
+    confirmButtonText: 'รับทราบ',
+    confirmButtonColor: '#0f172a',
+    customClass: {
+      popup: 'rounded-[2.5rem] shadow-2xl border border-slate-100 p-6',
+      confirmButton: 'rounded-2xl px-8 py-3.5 font-black tracking-wide transition-all active:scale-95 shadow-lg shadow-slate-900/20'
+    }
+  });
+};
 </script>
 
 <template>
@@ -178,6 +222,9 @@ const goToMyProfile = async () => {
                 </div>
                 <button @click.stop="goToMyProfile" class="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-3">
                   <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><i class="bi bi-person-badge"></i></div> โปรไฟล์ของฉัน
+                </button>
+                <button @click.stop="goToProfileSettings" class="w-full text-left px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition-colors flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500"><i class="bi bi-link-45deg text-lg"></i></div> ผูกบัญชีระบบ
                 </button>
                 <button @click.stop="showAccountInfo" class="w-full text-left px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-3">
                   <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400"><i class="bi bi-info-circle"></i></div> ข้อมูลระบบ
