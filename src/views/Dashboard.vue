@@ -16,10 +16,10 @@ const isAdmin = computed(() => authStore.isAdmin);
 // ✨ ดึง roomCode จาก Store
 const roomCode = computed(() => authStore.currentRoomCode || 'N/A');
 
-// ✨ ฟีเจอร์สลับห้องเรียน (กลับไปหน้า lobby หรือ select-room)
+// ✨ ฟีเจอร์สลับห้องเรียน (กลับไปหน้า lobby)
 const handleChangeRoom = () => {
   authStore.clearRoom();
-  router.push('/lobby'); // ปรับเป็น /select-room ได้ตาม Route ที่ใช้งานจริง
+  router.push('/lobby'); 
 };
 
 const goToMyProfile = async () => {
@@ -45,40 +45,40 @@ const goToMyProfile = async () => {
   <div class="relative overflow-hidden pb-12 bg-slate-50/50 min-h-screen">
     <div class="max-w-7xl mx-auto space-y-6 md:space-y-8 relative z-10 p-4 sm:p-6 md:p-8">
       
-      <div class="relative bg-slate-900 rounded-[2.5rem] p-8 md:p-14 shadow-2xl shadow-slate-900/20 overflow-hidden group border border-slate-800">
-        <div class="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 transition-transform duration-1000 group-hover:scale-110"></div>
-        <div class="absolute bottom-0 left-0 w-80 h-80 bg-indigo-600/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4 transition-transform duration-1000 group-hover:scale-110"></div>
+      <div class="relative bg-gradient-to-br from-blue-700 via-indigo-600 to-violet-700 rounded-[2.5rem] p-6 md:p-10 shadow-[0_10px_40px_-10px_rgba(79,70,229,0.4)] overflow-hidden group">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 transition-transform duration-700 group-hover:scale-110"></div>
+        <div class="absolute bottom-0 left-10 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl translate-y-1/2 transition-transform duration-700 group-hover:scale-110"></div>
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay pointer-events-none"></div>
 
-        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-8">
           <div class="text-white">
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-4 drop-shadow-md">สวัสดี, {{ userName }}! 👋</h1>
-            <p class="text-slate-300 text-lg md:text-xl font-medium tracking-wide">ยินดีต้อนรับสู่แดชบอร์ดจัดการห้องเรียน</p>
+            <h1 class="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight mb-2 drop-shadow-md">สวัสดี, {{ userName }}! 👋</h1>
+            <p class="text-blue-100 text-sm md:text-base font-medium tracking-wide opacity-90">ยินดีต้อนรับสู่แดชบอร์ดจัดการห้องเรียน</p>
           </div>
           
-          <div class="flex flex-wrap items-center w-full md:w-auto gap-4">
-            <div class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-3.5 rounded-[1.5rem] flex items-center gap-4 shadow-xl">
-              <i class="bi bi-key-fill text-blue-400 text-lg"></i>
+          <div class="flex flex-wrap items-center w-full md:w-auto gap-3 md:gap-4">
+            <div class="bg-white/10 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-[1.25rem] flex items-center gap-3 shadow-lg">
+              <i class="bi bi-key-fill text-blue-200 text-lg"></i>
               <div class="flex flex-col">
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Room Code</span>
-                <span class="text-white font-mono font-bold text-base tracking-widest leading-none">{{ roomCode }}</span>
+                <span class="text-[10px] font-black text-blue-200 uppercase tracking-widest leading-none mb-1">Room Code</span>
+                <span class="text-white font-mono font-bold text-sm md:text-base tracking-widest leading-none">{{ roomCode }}</span>
               </div>
             </div>
 
-            <div class="bg-white/5 backdrop-blur-xl border border-white/10 px-6 py-3.5 rounded-[1.5rem] flex items-center gap-4 shadow-xl h-full">
-              <span class="relative flex h-3 w-3">
+            <div class="bg-white/10 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-[1.25rem] flex items-center gap-3 shadow-lg h-full">
+              <span class="relative flex h-2.5 w-2.5">
                 <span :class="isAdmin ? 'bg-emerald-400' : 'bg-blue-400'" class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
-                <span :class="isAdmin ? 'bg-emerald-500' : 'bg-blue-500'" class="relative inline-flex rounded-full h-3 w-3"></span>
+                <span :class="isAdmin ? 'bg-emerald-400' : 'bg-blue-400'" class="relative inline-flex rounded-full h-2.5 w-2.5"></span>
               </span>
-              <span class="text-white font-black text-sm tracking-widest uppercase leading-none mt-0.5">{{ role }}</span>
+              <span class="text-white font-black text-xs md:text-sm tracking-widest uppercase leading-none mt-0.5">{{ role }}</span>
             </div>
 
             <button 
               @click="handleChangeRoom"
-              class="h-[3.25rem] w-[3.25rem] bg-white/5 hover:bg-white/10 active:scale-95 backdrop-blur-xl border border-white/10 rounded-[1.25rem] flex items-center justify-center text-white transition-all shadow-xl"
+              class="h-11 w-11 md:h-12 md:w-12 bg-white/10 hover:bg-white/20 active:scale-95 backdrop-blur-xl border border-white/20 rounded-[1.25rem] flex items-center justify-center text-white transition-all shadow-lg"
               title="สลับห้องเรียน"
             >
-              <i class="bi bi-arrow-left-right text-lg"></i>
+              <i class="bi bi-arrow-left-right text-base md:text-lg"></i>
             </button>
           </div>
         </div>
