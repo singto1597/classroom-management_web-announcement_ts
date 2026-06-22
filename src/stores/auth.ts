@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import router from '@/router';
-import api from '@/services/api'; // 🚨 ใช้ API ตัวเก่งของเราแทน fetch ธรรมดา
+import api from '@/services/api'; 
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('access_token'));
   const userId = ref<string | null>(localStorage.getItem('user_id_str'));
   
+  // 🌟 เพิ่ม Prefix เข้ามา
+  const prefix = ref<string | null>(localStorage.getItem('user_prefix'));
   const firstName = ref<string | null>(localStorage.getItem('user_first_name'));
   const lastName = ref<string | null>(localStorage.getItem('user_last_name'));
   const email = ref<string | null>(localStorage.getItem('user_email'));
@@ -22,30 +24,34 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value);
   const isAdmin = computed(() => currentRole.value !== 'student' && currentRole.value !== null);
 
-  // ✨ จัดการชื่อให้ฉลาดขึ้น ถ้ามีคำแปลกปลอมหลุดมา ให้ใช้คำสำรอง
+  // ✨ ถ้ามีคำนำหน้า (Prefix) ถือว่ากรอกข้อมูลครบแล้ว!
+  const isOnboarded = computed(() => !!prefix.value && prefix.value.trim() !== '');
+
   const currentUserName = computed(() => {
-    const first = firstName.value && firstName.value !== 'ไม่ระบุชื่อ' ? firstName.value : '';
-    const last = lastName.value || '';
-    const full = `${first} ${last}`.trim();
+    const p = prefix.value || '';
+    const f = firstName.value && firstName.value !== 'ไม่ระบุชื่อ' ? firstName.value : '';
+    const l = lastName.value || '';
+    const full = `${p}${f} ${l}`.trim();
     return full || 'ผู้ใช้งานระบบ';
   });
 
   const fetchProfile = async () => {
     if (!token.value) return;
     try {
-      // 🚨 ยิง API ผ่าน Axios Instance ที่เรา Set ค่าไว้สมบูรณ์แล้ว
       const data: any = await api.get(`/api/auth/me`);
       
-      // ล้างข้อมูลขยะ (ถ้าระบบส่งคำแปลกๆ มาให้เปลี่ยนเป็นว่างเปล่า)
       const validFirstName = data.first_name !== 'ไม่ระบุชื่อ' ? data.first_name : '';
       
+      prefix.value = data.prefix || '';
       firstName.value = validFirstName || '';
       lastName.value = data.last_name || '';
       email.value = data.email || '';
       discordId.value = data.discord_id ? String(data.discord_id) : null;
       googleId.value = data.google_id ? String(data.google_id) : null;
       
-      // บันทึกลง LocalStorage
+      if (prefix.value) localStorage.setItem('user_prefix', prefix.value);
+      else localStorage.removeItem('user_prefix');
+
       if (firstName.value) localStorage.setItem('user_first_name', firstName.value);
       else localStorage.removeItem('user_first_name');
 
@@ -94,7 +100,6 @@ export const useAuthStore = defineStore('auth', () => {
     currentRoomName.value = null;
     currentRoomCode.value = null;
     currentRole.value = null;
-
     localStorage.removeItem('current_room_id');
     localStorage.removeItem('current_room_name');
     localStorage.removeItem('current_room_code');
@@ -104,19 +109,20 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = () => {
     token.value = null;
     userId.value = null;
+    prefix.value = null;
     firstName.value = null;
     lastName.value = null;
     email.value = null;
     discordId.value = null;
     googleId.value = null;
     clearRoom();
-    localStorage.clear(); // ระเบิดข้อมูลทิ้งให้หมดเวลา Logout
+    localStorage.clear();
     router.push('/login');
   };
 
   return {
-    token, userId, firstName, lastName, currentUserName,
-    email, discordId, googleId,
+    token, userId, prefix, firstName, lastName, currentUserName,
+    email, discordId, googleId, isOnboarded,
     currentRoomId, currentRoomName, currentRoomCode, currentRole,
     isAuthenticated, isAdmin,
     setToken, setUserId, setRoom, clearRoom, logout, fetchProfile

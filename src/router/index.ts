@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import MainLayout from '@/layouts/MainLayout.vue';
-// ✨ Import Global Layout สำหรับหน้า Lobby
 import GlobalLayout from '@/layouts/GlobalLayout.vue';
 
 const router = createRouter({
@@ -25,7 +24,13 @@ const router = createRouter({
       component: () => import('@/views/auth/DiscordCallback.vue'), 
       meta: { requiresAuth: false }
     },
-    // ✨ แทนที่ /lobby ด้วย /lobby พร้อมใช้ GlobalLayout
+    // 🌟 เพิ่มหน้า Onboarding (บังคับกรอกชื่อ)
+    {
+      path: '/onboarding',
+      name: 'onboarding',
+      component: () => import('@/views/auth/Onboarding.vue'),
+      meta: { requiresAuth: true }
+    },
     {
       path: '/lobby',
       component: GlobalLayout,
@@ -38,16 +43,11 @@ const router = createRouter({
         }
       ]
     },
-    // --- 📚 ระบบ Classroom (ใช้ MainLayout) ---
     {
       path: '/',
       component: MainLayout,
       meta: { requiresAuth: true },
       children: [
-        {
-          path: '',
-          redirect: '/dashboard'
-        },
         {
           path: 'dashboard',
           name: 'dashboard',
@@ -55,49 +55,44 @@ const router = createRouter({
         },
         {
           path: 'students',
-          name: 'student-list',
+          name: 'students',
           component: () => import('@/views/students/StudentList.vue'),
         },
         {
           path: 'students/add',
-          name: 'student-add',
+          name: 'add-student',
           component: () => import('@/views/students/AddStudent.vue'),
-          meta: { requiresAdmin: true }
         },
         {
-          path: 'students/:no',
+          path: 'students/:id',
           name: 'student-profile',
           component: () => import('@/views/students/StudentProfile.vue'),
         },
         {
-          path: 'students/:no/edit',
-          name: 'student-edit',
+          path: 'students/:id/edit',
+          name: 'edit-student',
           component: () => import('@/views/students/EditStudent.vue'),
-          meta: { requiresAdmin: true }
+        },
+        {
+          path: 'schedules',
+          name: 'schedules',
+          component: () => import('@/views/schedules/ScheduleManager.vue'),
         },
         {
           path: 'tasks',
-          name: 'task-list',
+          name: 'tasks',
           component: () => import('@/views/tasks/TaskList.vue'),
         },
         {
           path: 'tasks/add',
-          name: 'task-add',
+          name: 'add-task',
           component: () => import('@/views/tasks/AddTask.vue'),
-          meta: { requiresAdmin: true }
         },
         {
           path: 'tasks/:id/edit',
-          name: 'task-edit',
+          name: 'edit-task',
           component: () => import('@/views/tasks/EditTask.vue'),
-          meta: { requiresAdmin: true }
         },
-        {
-          path: 'schedules',
-          name: 'schedule-manager',
-          component: () => import('@/views/schedules/ScheduleManager.vue'),
-        },
-        // --- 💰 Finance Module ---
         {
           path: 'finance',
           name: 'finance-dashboard',
@@ -107,18 +102,16 @@ const router = createRouter({
           path: 'finance/settings',
           name: 'finance-settings',
           component: () => import('@/views/finance/FinanceSettings.vue'),
-          meta: { requiresAdmin: true }
-        },
-        {
-          path: 'finance/transactions',
-          name: 'finance-transactions',
-          component: () => import('@/views/finance/TransactionHistory.vue'),
         },
         {
           path: 'finance/transactions/add',
-          name: 'finance-transactions-add',
+          name: 'finance-add-transaction',
           component: () => import('@/views/finance/AddTransaction.vue'),
-          meta: { requiresAdmin: true }
+        },
+        {
+          path: 'finance/transactions',
+          name: 'finance-transaction-history',
+          component: () => import('@/views/finance/TransactionHistory.vue'),
         },
         {
           path: 'finance/collections',
@@ -140,36 +133,19 @@ const router = createRouter({
   ],
 });
 
-// Navigation Guard
 router.beforeEach((to, from) => {
   const authStore = useAuthStore();
   const isAuthenticated = authStore.isAuthenticated;
   const currentRoomId = authStore.currentRoomId;
   const currentRole = authStore.currentRole; 
-  const isAdmin = authStore.isAdmin;
 
-  // 1. ตรวจสอบการล็อกอิน
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    return '/login';
-  } 
-  
-  // ✨ ล็อกอินแล้วเข้าหน้า login ให้เด้งมาที่ Lobby แทน (เปลี่ยนจาก /lobby)
-  if (to.path === '/login' && isAuthenticated) {
-    return '/lobby';
-  }
+  if (to.meta.requiresAuth && !isAuthenticated) return '/login';
+  if (to.path === '/login' && isAuthenticated) return '/lobby';
 
-  // 2. ป้องกันการเข้าหน้าของ Classroom ถ้ายังไม่ได้เลือกห้อง
-  // อนุญาตให้เข้า Global Routes ได้โดยไม่ต้องมีข้อมูลห้อง
-  const isGlobalRoute = to.path.startsWith('/lobby') || to.path === '/login';
+  const isGlobalRoute = to.path.startsWith('/lobby') || to.path === '/login' || to.path === '/onboarding';
   
-  // ✨ ถ้าล็อกอินแล้ว พยายามเข้าหน้าอื่น (เช่น /dashboard) แต่ไม่มีห้อง/role ให้เด้งกลับมา Lobby
   if (isAuthenticated && (!currentRoomId || !currentRole) && !isGlobalRoute) {
     return '/lobby';
-  }
-
-  // 3. ตรวจสอบสิทธิ์ Admin (RBAC) ภายใน Classroom
-  if (to.meta.requiresAdmin && !isAdmin) {
-    return '/dashboard'; // โดนเตะกลับแบบเงียบๆ ถ้าไม่ใช่แอดมิน
   }
 });
 
