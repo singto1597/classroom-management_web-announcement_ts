@@ -139,9 +139,14 @@ const rejectJoin = async (studentNo: number) => {
       <h1 class="text-2xl font-black text-slate-800 tracking-tight">
         <i class="bi bi-people-fill me-2 text-blue-600"></i>จัดการนักเรียน
       </h1>
-      <RouterLink v-if="isAdmin" to="/students/add" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center">
-        <i class="bi bi-person-plus-fill me-2"></i>เพิ่มนักเรียน
-      </RouterLink>
+      <div v-if="isAdmin" class="flex gap-2">
+        <RouterLink to="/students/export" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-bold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center border border-emerald-200 shadow-sm active:scale-95">
+          <i class="bi bi-file-earmark-excel-fill text-lg"></i>
+        </RouterLink>
+        <RouterLink to="/students/add" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-slate-900/20 transition-all flex items-center justify-center active:scale-95">
+          <i class="bi bi-person-plus-fill me-2"></i>เพิ่มนักเรียน
+        </RouterLink>
+      </div>
     </div>
 
     <div v-if="isAdmin" class="border-b border-slate-200 mb-6 flex gap-6 px-2">

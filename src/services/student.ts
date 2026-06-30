@@ -84,6 +84,21 @@ export const StudentService = {
   },
   async rejectStudent(roomId: number, studentNo: number): Promise<any> {
     return await api.delete(`/api/classroom/${roomId}/requests/${studentNo}/reject`);
+  },
+  
+  /**
+   * ขอไฟล์ Export นักเรียนเป็น Excel (รับกลับมาเป็น Blob)
+   */
+  async exportStudentsExcel(roomId: number, fields: string[], userName: string): Promise<Blob> {
+    const response = await api.post(`/api/classroom/${roomId}/export?target_type=room`, {
+      fields: fields,
+      user_name: userName
+    }, {
+      // 🚨 สำคัญมาก! บังคับให้ Axios รับข้อมูลมาเป็นไฟล์ไบนารี
+      responseType: 'blob' 
+    });
+    
+    return response.data; // คืนค่ากลับมาเป็น Blob
   }
 }
 

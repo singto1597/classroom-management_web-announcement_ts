@@ -10,7 +10,7 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const studentNo = route.params.no as string
+const studentNo = route.params.id as string
 const loading = ref(true)
 const saving = ref(false)
 

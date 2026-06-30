@@ -170,9 +170,9 @@ const goToMyProfile = async () => {
                   <i class="bi bi-person-plus text-slate-400 group-hover:text-emerald-600"></i>
                 </div>
               </router-link>
-              <button class="text-xs font-bold text-slate-400 hover:text-emerald-600 mt-2 transition-colors flex items-center justify-center gap-1.5 py-2 active:scale-95 w-full">
-                <i class="bi bi-file-earmark-excel"></i> Export ข้อมูลเป็น Excel
-              </button>
+              <router-link to="/students/export" class="text-xs font-bold text-slate-400 hover:text-emerald-600 mt-2 transition-colors flex items-center justify-center gap-1.5 py-2 active:scale-95 w-full bg-transparent">
+                <i class="bi bi-file-earmark-excel"></i> สร้างไฟล์ Export (Excel)
+              </router-link>
             </template>
           </div>
         </div>

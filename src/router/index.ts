@@ -64,6 +64,11 @@ const router = createRouter({
           component: () => import('@/views/students/AddStudent.vue'),
         },
         {
+          path: 'students/export',
+          name: 'export-students',
+          component: () => import('@/views/students/ExportCustom.vue'),
+        },
+        {
           path: 'students/:id',
           name: 'student-profile',
           component: () => import('@/views/students/StudentProfile.vue'),
