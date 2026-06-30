@@ -85,7 +85,7 @@ export const StudentService = {
   async rejectStudent(roomId: number, studentNo: number): Promise<any> {
     return await api.delete(`/api/classroom/${roomId}/requests/${studentNo}/reject`);
   },
-  
+
   /**
    * ขอไฟล์ Export นักเรียนเป็น Excel (รับกลับมาเป็น Blob)
    */
@@ -98,7 +98,7 @@ export const StudentService = {
       responseType: 'blob' 
     });
     
-    return response.data; // คืนค่ากลับมาเป็น Blob
+    return response; // คืนค่ากลับมาเป็น Blob
   }
 }
 
