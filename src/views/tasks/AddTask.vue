@@ -9,7 +9,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 // --- ถอด Mock Data เปลี่ยนมาดึงจาก Store ---
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -44,7 +44,7 @@ const handleAddTask = async () => {
   isSubmitting.value = true
   
   try {
-    await TaskService.createTask(currentServerId, {
+    await TaskService.createTask(currentRoomId, {
       ...(taskForm as any),
       user_name: currentUserName
     })
@@ -71,7 +71,7 @@ const handleAddNote = async () => {
   isSubmitting.value = true
   
   try {
-    await TaskService.createDailyNote(currentServerId, {
+    await TaskService.createDailyNote(currentRoomId, {
       ...(noteForm as any),
       user_name: currentUserName
     })

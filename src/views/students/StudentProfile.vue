@@ -10,20 +10,20 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const studentNo = route.params.no as string
+const studentNo = route.params.id as string
 const student = ref<Student | null>(null)
 const loading = ref(true)
 
 // --- ถอด Mock Data เปลี่ยนมาดึงจาก Store ---
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const isAdmin = computed(() => authStore.isAdmin) // ใช้ getter จาก store โดยตรง
 
 const fetchStudent = async () => {
   try {
     loading.value = true
-    if (!currentServerId) throw new Error('ไม่พบข้อมูลเซิร์ฟเวอร์ กรุณาเลือกห้องเรียนก่อน')
+    if (!currentRoomId) throw new Error('ไม่พบข้อมูลเซิร์ฟเวอร์ กรุณาเลือกห้องเรียนก่อน')
     
-    student.value = await StudentService.getStudentByNo(currentServerId, studentNo)
+    student.value = await StudentService.getStudentByNo(currentRoomId, studentNo)
   } catch (error: any) {
     console.error('Error fetching student:', error)
     Swal.fire({

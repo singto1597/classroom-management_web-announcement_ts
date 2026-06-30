@@ -10,12 +10,12 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const studentNo = route.params.no as string
+const studentNo = route.params.id as string
 const loading = ref(true)
 const saving = ref(false)
 
 // --- นำ Mock Data ออก แล้วดึงจาก Store ---
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -48,7 +48,7 @@ const form = ref<Partial<Student>>({
 const fetchStudent = async () => {
   try {
     loading.value = true
-    const data = await StudentService.getStudentByNo(currentServerId, studentNo)
+    const data = await StudentService.getStudentByNo(currentRoomId, studentNo)
     Object.keys(form.value).forEach(key => {
       if (key in data) {
         (form.value as any)[key] = (data as any)[key] || ''
@@ -81,7 +81,7 @@ const handleSubmit = async () => {
       }
     })
 
-    await StudentService.updateStudent(currentServerId, studentNo, { ...payload, user_name: currentUserName } as any)
+    await StudentService.updateStudent(currentRoomId, studentNo, { ...payload, user_name: currentUserName } as any)
     
     await Swal.fire({
       icon: 'success',

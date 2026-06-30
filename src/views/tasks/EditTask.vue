@@ -10,7 +10,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 // --- ถอด Mock Data เปลี่ยนมาดึงจาก Store ---
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -27,7 +27,7 @@ const form = reactive({
 
 const fetchTask = async () => {
   try {
-    const task = await TaskService.getTaskById(currentServerId, taskId)
+    const task = await TaskService.getTaskById(currentRoomId, taskId)
     form.task_name = task.task_name
     form.task_detail = task.task_detail || ''
     form.due_date = task.due_date
@@ -48,7 +48,7 @@ const handleUpdateTask = async () => {
   isSubmitting.value = true
   
   try {
-    await TaskService.updateTask(currentServerId, taskId, {
+    await TaskService.updateTask(currentRoomId, taskId, {
       ...form,
       user_name: currentUserName
     })

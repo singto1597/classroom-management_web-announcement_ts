@@ -10,7 +10,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 // --- ถอด Mock Data เปลี่ยนมาดึงจาก Store ---
-const currentServerId = authStore.currentRoomId!
+const currentRoomId = authStore.currentRoomId!
 const currentUserName = authStore.currentUserName!
 const isAdmin = computed(() => authStore.isAdmin)
 
@@ -32,8 +32,8 @@ const fetchData = async () => {
   isLoading.value = true
   try {
     const [tasksResult, notesResult] = await Promise.allSettled([
-      TaskService.getAllTasks(currentServerId),
-      TaskService.getDailyNotes(currentServerId)
+      TaskService.getAllTasks(currentRoomId),
+      TaskService.getDailyNotes(currentRoomId)
     ])
 
     if (tasksResult.status === 'fulfilled') {
@@ -95,10 +95,10 @@ const toggleStatus = async (task: Task) => {
   if (!isAdmin.value) return Toast.fire({ icon: 'warning', title: 'เฉพาะแอดมินเท่านั้น' })
   try {
     if (task.status === 'pending') {
-      await TaskService.markDone(currentServerId, task.id, currentUserName)
+      await TaskService.markDone(currentRoomId, task.id, currentUserName)
       Toast.fire({ icon: 'success', title: '🎉 ยินดีด้วย! งานเสร็จแล้ว' })
     } else {
-      await TaskService.markPending(currentServerId, task.id, currentUserName)
+      await TaskService.markPending(currentRoomId, task.id, currentUserName)
       Toast.fire({ icon: 'info', title: '🔄 เปลี่ยนกลับเป็นยังไม่เสร็จ' })
     }
     await fetchData()
@@ -122,7 +122,7 @@ const deleteTask = async (taskId: number) => {
 
   if (result.isConfirmed) {
     try {
-      await TaskService.deleteTask(currentServerId, taskId, currentUserName)
+      await TaskService.deleteTask(currentRoomId, taskId, currentUserName)
       Toast.fire({ icon: 'success', title: '🗑️ ลบงานเรียบร้อยแล้ว' })
       await fetchData()
     } catch (error: any) {
