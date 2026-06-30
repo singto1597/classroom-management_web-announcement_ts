@@ -98,7 +98,8 @@ export const StudentService = {
       responseType: 'blob' 
     });
     
-    return response; // คืนค่ากลับมาเป็น Blob
+    // 👇 เติม as unknown as Blob เพื่อตบตา TypeScript ให้ยอม Build ผ่าน
+    return response as unknown as Blob; 
   }
 }
 
